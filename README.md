@@ -1,3 +1,11 @@
+# Spirit of Half-Life 1.2 Updated
+
+This is an updated version of the [Spirit of Half-Life](https://www.moddb.com/mods/spirit-of-half-life) mod base, specifically [version 1.2](https://www.moddb.com/mods/spirit-of-half-life/downloads/sohl-v12-with-source-code), combined with the fixes and tweaks from [Solokiller's Half-Life Updated](https://github.com/SamVanheer/halflife-updated) and [LogicAndTrick's version of the base](https://github.com/LogicAndTrick/halflife-updated/tree/spirit/spirit-1.2).
+
+This repository will (probably) only include further commits from Half-Life Updated that weren't yet pushed to LogicAndTrick's fork.
+
+## Original HL Updated README
+
 About
 ======================
 
