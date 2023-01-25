@@ -1,9 +1,6 @@
 name: SOHL Updated
 
-on:
-  push:
-    branches:
-      - spirit/*
+on: [push, pull_request]
 
 jobs:
   linux:
@@ -38,17 +35,17 @@ jobs:
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v1.0.2
       - name: Build
-        run: MSBuild.exe projects/vs2019/projects.sln /p:Configuration=Release /p:Platform=Win32
+        run: MSBuild.exe projects/vs2022/sohl-updated.sln /p:Configuration=Release /p:Platform=Win32
       - name: Deploy
         uses: actions/upload-artifact@v2
         with:
           name: Win32
           path: |
-            projects/vs2019/Release/hl_cdll/client.dll
-            projects/vs2019/Release/hl_cdll/client.exp
-            projects/vs2019/Release/hl_cdll/client.lib
-            projects/vs2019/Release/hl_cdll/client.pdb
-            projects/vs2019/Release/hldll/spirit.dll
-            projects/vs2019/Release/hldll/spirit.exp
-            projects/vs2019/Release/hldll/spirit.lib
-            projects/vs2019/Release/hldll/spirit.pdb 
+            projects/vs2022/Release/hl_cdll/client.dll
+            projects/vs2022/Release/hl_cdll/client.exp
+            projects/vs2022/Release/hl_cdll/client.lib
+            projects/vs2022/Release/hl_cdll/client.pdb
+            projects/vs2022/Release/hldll/spirit.dll
+            projects/vs2022/Release/hldll/spirit.exp
+            projects/vs2022/Release/hldll/spirit.lib
+            projects/vs2022/Release/hldll/spirit.pdb 
