@@ -574,16 +574,4 @@ void CXenSpore::Think()
 {
 	float flInterval = StudioFrameAdvance();
 	SetNextThink(0.1);
-
-#if 0
-	DispatchAnimEvents( flInterval );
-
-	switch( GetActivity() )
-	{
-	default:
-	case ACT_IDLE:
-		break;
-
-	}
-#endif
 }

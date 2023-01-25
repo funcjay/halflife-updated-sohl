@@ -86,7 +86,7 @@ public:
 	int Classify() override;
 	void HandleAnimEvent(MonsterEvent_t* pEvent) override;
 	bool CheckRangeAttack1(float flDot, float flDist) override;
-	bool CheckRangeAttack2(float flDot, float flDist) override;
+	bool CheckRangeAttack2(float flDot, float flDist) override { return false; }
 	bool TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType) override;
 
 	virtual float GetDamageAmount() { return gSkillData.headcrabDmgBite; }
@@ -409,22 +409,6 @@ bool CHeadCrab::CheckRangeAttack1(float flDot, float flDist)
 		return true;
 	}
 	return false;
-}
-
-//=========================================================
-// CheckRangeAttack2
-//=========================================================
-bool CHeadCrab::CheckRangeAttack2(float flDot, float flDist)
-{
-	return false;
-	// BUGBUG: Why is this code here?  There is no ACT_RANGE_ATTACK2 animation.  I've disabled it for now.
-#if 0
-	if ( FBitSet( pev->flags, FL_ONGROUND ) && flDist > 64 && flDist <= 256 && flDot >= 0.5 )
-	{
-		return true;
-	}
-	return false;
-#endif
 }
 
 bool CHeadCrab::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType)

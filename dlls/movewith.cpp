@@ -235,28 +235,6 @@ int TryAssistEntity(CBaseEntity* pEnt)
 		pEnt->m_iLFlags &= ~LF_DOASSIST;
 	}
 
-#if 0
-	else
-	{
-//		float fLeft = (pEnt->m_fNextThink - pEnt->pev->ltime);
-//		ALERT(at_console, "NoAssist: origin %f %f %f, ontrack %f %f %f, mfNT %f, should be %f\n", pEnt->pev->origin.x, pEnt->pev->origin.y, pEnt->pev->origin.z, pEnt->pev->origin.x + pEnt->pev->velocity.x*fLeft, pEnt->pev->origin.y + pEnt->pev->velocity.y*fLeft, pEnt->pev->origin.z + pEnt->pev->velocity.z*fLeft, pEnt->m_fNextThink, ((int)(pEnt->pev->origin.x+pEnt->pev->velocity.x*fLeft)-pEnt->pev->origin.x)/pEnt->pev->velocity.x+pEnt->pev->ltime);
-		static Vector staticPos;
-		static float staticLtime;
-		static float staticGtime;
-		static float staticFtime;
-//		ALERT(at_console, "No assist %s; diff %f %f %f, ediff %f %f %f, ltdiff %f, gtdiff %f, ftime %f, nthink %f, mfNT %f\n",
-//			STRING(pEnt->pev->targetname),
-//			pEnt->pev->origin.x - staticPos.x, pEnt->pev->origin.y - staticPos.y, pEnt->pev->origin.z - staticPos.z,
-//			pEnt->pev->velocity.x*staticFtime, pEnt->pev->velocity.y*staticFtime, pEnt->pev->velocity.z*staticFtime,
-//			pEnt->pev->ltime - staticLtime, gpGlobals->time - staticGtime, gpGlobals->frametime,
-//			pEnt->pev->nextthink, pEnt->m_fNextThink
-//		);
-		staticPos = pEnt->pev->origin;
-		staticLtime = pEnt->pev->ltime;
-		staticGtime = gpGlobals->time;
-		staticFtime = gpGlobals->frametime;
-	}
-#endif
 	//	ALERT(at_console, "TryAssist %s \"%s\", lflags %f, pevnt %f, ltime %f, mfnt %f, mpevnt %f, %f\n", STRING(pEnt->pev->classname), STRING(pEnt->pev->targetname), pEnt->m_iLFlags, pEnt->pev->nextthink, pEnt->pev->ltime, pEnt->m_fNextThink, pEnt->m_fPevNextThink, pEnt->pev->origin.x);
 	//	ALERT(at_console, "TryAssist %s \"%s\", pevnt %f, ltime %f, mfnt %f, mpevnt %f, lfl %d, %f\n", STRING(pEnt->pev->classname), STRING(pEnt->pev->targetname), pEnt->pev->nextthink, pEnt->pev->ltime, pEnt->m_fNextThink, pEnt->m_fPevNextThink, pEnt->m_iLFlags, pEnt->pev->origin.x);
 	return 1;

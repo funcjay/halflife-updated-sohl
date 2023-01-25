@@ -179,7 +179,6 @@ class CBigMomma : public CBaseMonster
 public:
 	void Spawn() override;
 	void Precache() override;
-	bool KeyValue(KeyValueData* pkvd) override;
 	void Activate() override;
 	bool TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType) override;
 
@@ -387,21 +386,6 @@ const char* CBigMomma::pFootSounds[] =
 		"gonarch/gon_step2.wav",
 		"gonarch/gon_step3.wav",
 };
-
-
-
-bool CBigMomma::KeyValue(KeyValueData* pkvd)
-{
-#if 0
-	if (FStrEq(pkvd->szKeyName, "volume"))
-	{
-		m_volume = atof(pkvd->szValue);
-		return true;
-	}
-
-#endif
-	return CBaseMonster::KeyValue(pkvd);
-}
 
 //=========================================================
 // Classify - indicates this monster's place in the

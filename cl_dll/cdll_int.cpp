@@ -73,8 +73,6 @@ HUD_ConnectionlessPacket
 */
 int DLLEXPORT HUD_ConnectionlessPacket(const struct netadr_s* net_from, const char* args, char* response_buffer, int* response_buffer_size)
 {
-	//	RecClConnectionlessPacket(net_from, args, response_buffer, response_buffer_size);
-
 	// Parse stuff from args
 	int max_buffer_size = *response_buffer_size;
 
@@ -89,30 +87,22 @@ int DLLEXPORT HUD_ConnectionlessPacket(const struct netadr_s* net_from, const ch
 
 void DLLEXPORT HUD_PlayerMoveInit(struct playermove_s* ppmove)
 {
-	//	RecClClientMoveInit(ppmove);
-
 	PM_Init(ppmove);
 }
 
 char DLLEXPORT HUD_PlayerMoveTexture(char* name)
 {
-	//	RecClClientTextureType(name);
-
 	return PM_FindTextureType(name);
 }
 
 void DLLEXPORT HUD_PlayerMove(struct playermove_s* ppmove, int server)
 {
-	//	RecClClientMove(ppmove, server);
-
 	PM_Move(ppmove, server);
 }
 
 int DLLEXPORT Initialize(cl_enginefunc_t* pEnginefuncs, int iVersion)
 {
 	gEngfuncs = *pEnginefuncs;
-
-	//	RecClInitialize(pEnginefuncs, iVersion);
 
 	if (iVersion != CLDLL_INTERFACE_VERSION)
 		return 0;
@@ -144,7 +134,6 @@ so the HUD can reinitialize itself.
 
 int DLLEXPORT HUD_VidInit()
 {
-	//	RecClHudVidInit();
 	gHUD.VidInit();
 
 	VGui_Startup();
@@ -164,7 +153,6 @@ the hud variables.
 
 void DLLEXPORT HUD_Init()
 {
-	//	RecClHudInit();
 	InitInput();
 	gHUD.Init();
 	Scheme_Init();
@@ -182,8 +170,6 @@ redraw the HUD.
 
 int DLLEXPORT HUD_Redraw(float time, int intermission)
 {
-	//	RecClHudRedraw(time, intermission);
-
 	gHUD.Redraw(time, 0 != intermission);
 
 	return 1;
@@ -205,8 +191,6 @@ returns 1 if anything has been changed, 0 otherwise.
 
 int DLLEXPORT HUD_UpdateClientData(client_data_t* pcldata, float flTime)
 {
-	//	RecClHudUpdateClientData(pcldata, flTime);
-
 	IN_Commands();
 
 	return static_cast<int>(gHUD.UpdateClientData(pcldata, flTime));
@@ -222,8 +206,6 @@ Called at start and end of demos to restore to "non"HUD state.
 
 void DLLEXPORT HUD_Reset()
 {
-	//	RecClHudReset();
-
 	gHUD.VidInit();
 }
 
@@ -237,8 +219,6 @@ Called by engine every frame that client .dll is loaded
 
 void DLLEXPORT HUD_Frame(double time)
 {
-	//	RecClHudFrame(time);
-
 	GetClientVoiceMgr()->Frame(time);
 }
 
@@ -253,8 +233,6 @@ Called when a player starts or stops talking.
 
 void DLLEXPORT HUD_VoiceStatus(int entindex, qboolean bTalking)
 {
-	////	RecClVoiceStatus(entindex, bTalking);
-
 	GetClientVoiceMgr()->UpdateSpeakerStatus(entindex, 0 != bTalking);
 }
 
@@ -268,8 +246,6 @@ Called when a director event message was received
 
 void DLLEXPORT HUD_DirectorMessage(int iSize, void* pbuf)
 {
-	//	RecClDirectorMessage(iSize, pbuf);
-
 	gHUD.m_Spectator.DirectorMessage(iSize, pbuf);
 }
 

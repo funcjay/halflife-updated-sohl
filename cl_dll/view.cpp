@@ -725,7 +725,6 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	V_DropPunchAngle(pparams->frametime, (float*)&ev_punchangle);
 
 	// smooth out stair step ups
-#if 1
 	if (0 == pparams->smoothing && 0 != pparams->onground && pparams->simorg[2] - oldz > 0)
 	{
 		float steptime;
@@ -747,22 +746,19 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	{
 		oldz = pparams->simorg[2];
 	}
-#endif
 
+	static float lastorg[3];
+	Vector delta;
+
+	VectorSubtract(pparams->simorg, lastorg, delta);
+
+	if (Length(delta) != 0.0)
 	{
-		static float lastorg[3];
-		Vector delta;
+		VectorCopy(pparams->simorg, ViewInterp.Origins[ViewInterp.CurrentOrigin & ORIGIN_MASK]);
+		ViewInterp.OriginTime[ViewInterp.CurrentOrigin & ORIGIN_MASK] = pparams->time;
+		ViewInterp.CurrentOrigin++;
 
-		VectorSubtract(pparams->simorg, lastorg, delta);
-
-		if (Length(delta) != 0.0)
-		{
-			VectorCopy(pparams->simorg, ViewInterp.Origins[ViewInterp.CurrentOrigin & ORIGIN_MASK]);
-			ViewInterp.OriginTime[ViewInterp.CurrentOrigin & ORIGIN_MASK] = pparams->time;
-			ViewInterp.CurrentOrigin++;
-
-			VectorCopy(pparams->simorg, lastorg);
-		}
+		VectorCopy(pparams->simorg, lastorg);
 	}
 
 	// Smooth out whole view in multiplayer when on trains, lifts
@@ -1661,8 +1657,6 @@ void V_CalcSpectatorRefdef(struct ref_params_s* pparams)
 
 void DLLEXPORT V_CalcRefdef(struct ref_params_s* pparams)
 {
-	//	RecClCalcRefdef(pparams);
-
 	// intermission / finale rendering
 	if (0 != pparams->intermission)
 	{
@@ -1676,25 +1670,6 @@ void DLLEXPORT V_CalcRefdef(struct ref_params_s* pparams)
 	{
 		V_CalcNormalRefdef(pparams);
 	}
-
-	/*
-// Example of how to overlay the whole screen with red at 50 % alpha
-#define SF_TEST
-#if defined SF_TEST
-	{
-		screenfade_t sf;
-		gEngfuncs.pfnGetScreenFade( &sf );
-
-		sf.fader = 255;
-		sf.fadeg = 0;
-		sf.fadeb = 0;
-		sf.fadealpha = 128;
-		sf.fadeFlags = FFADE_STAYOUT | FFADE_OUT;
-
-		gEngfuncs.pfnSetScreenFade( &sf );
-	}
-#endif
-*/
 }
 
 /*
@@ -1747,86 +1722,3 @@ void V_Init()
 	cl_waterdist = gEngfuncs.pfnRegisterVariable("cl_waterdist", "4", 0);
 	cl_chasedist = gEngfuncs.pfnRegisterVariable("cl_chasedist", "112", 0);
 }
-
-
-//#define TRACE_TEST
-#if defined(TRACE_TEST)
-
-extern float in_fov;
-/*
-====================
-CalcFov
-====================
-*/
-float CalcFov(float fov_x, float width, float height)
-{
-	float a;
-	float x;
-
-	if (fov_x < 1 || fov_x > 179)
-		fov_x = 90; // error, set to 90
-
-	x = width / tan(fov_x / 360 * M_PI);
-
-	a = atan(height / x);
-
-	a = a * 360 / M_PI;
-
-	return a;
-}
-
-int hitent = -1;
-
-void V_Move(int mx, int my)
-{
-	float fov;
-	float fx, fy;
-	float dx, dy;
-	float c_x, c_y;
-	float dX, dY;
-	Vector forward, up, right;
-	Vector newangles;
-
-	Vector farpoint;
-	pmtrace_t tr;
-
-	fov = CalcFov(in_fov, (float)ScreenWidth, (float)ScreenHeight);
-
-	c_x = (float)ScreenWidth / 2.0;
-	c_y = (float)ScreenHeight / 2.0;
-
-	dx = (float)mx - c_x;
-	dy = (float)my - c_y;
-
-	// Proportion we moved in each direction
-	fx = dx / c_x;
-	fy = dy / c_y;
-
-	dX = fx * in_fov / 2.0;
-	dY = fy * fov / 2.0;
-
-	newangles = v_angles;
-
-	newangles[YAW] -= dX;
-	newangles[PITCH] += dY;
-
-	// Now rotate v_forward around that point
-	AngleVectors(newangles, forward, right, up);
-
-	farpoint = v_origin + 8192 * forward;
-
-	// Trace
-	tr = *(gEngfuncs.PM_TraceLine((float*)&v_origin, (float*)&farpoint, PM_TRACELINE_PHYSENTSONLY, 2 /*point sized hull*/, -1));
-
-	if (tr.fraction != 1.0 && tr.ent != 0)
-	{
-		hitent = PM_GetPhysEntInfo(tr.ent);
-		PM_ParticleLine((float*)&v_origin, (float*)&tr.endpos, 5, 1.0, 0.0);
-	}
-	else
-	{
-		hitent = -1;
-	}
-}
-
-#endif

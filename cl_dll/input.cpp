@@ -205,8 +205,6 @@ Allows the engine to get a kbutton_t directly ( so it can check +mlook state, et
 */
 struct kbutton_s DLLEXPORT* KB_Find(const char* name)
 {
-	//	RecClFindKey(name);
-
 	kblist_t* p;
 	p = g_kbkeys;
 	while (p)
@@ -365,8 +363,6 @@ Return 1 to allow engine to process the key, otherwise, act on it as needed
 */
 int DLLEXPORT HUD_Key_Event(int down, int keynum, const char* pszCurrentBinding)
 {
-	//	RecClKeyEvent(down, keynum, pszCurrentBinding);
-
 	if (gViewPort)
 		return static_cast<int>(gViewPort->KeyInput(0 != down, keynum, pszCurrentBinding));
 
@@ -651,8 +647,6 @@ if active == 1 then we are 1) not playing back demos ( where our commands are ig
 */
 void DLLEXPORT CL_CreateMove(float frametime, struct usercmd_s* cmd, int active)
 {
-	//	RecClCL_CreateMove(frametime, cmd, active);
-
 	float spd;
 	Vector viewangles;
 	static Vector oldangles;
@@ -1016,10 +1010,7 @@ void CL_UnloadParticleMan();
 
 void DLLEXPORT HUD_Shutdown()
 {
-	//	RecClShutdown();
-
 	ShutdownInput();
-
 
 	FileSystem_FreeFileSystem();
 	CL_UnloadParticleMan();

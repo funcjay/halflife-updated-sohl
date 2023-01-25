@@ -39,7 +39,7 @@ class CZombie : public CBaseMonster
 public:
 	void Spawn() override;
 	void Precache() override;
-	void SetYawSpeed() override;
+	void SetYawSpeed() override { pev->yaw_speed = 120; }
 	int Classify() override;
 	void HandleAnimEvent(MonsterEvent_t* pEvent) override;
 	int IgnoreConditions() override;
@@ -113,25 +113,6 @@ const char* CZombie::pPainSounds[] =
 int CZombie::Classify()
 {
 	return m_iClass ? m_iClass : CLASS_ALIEN_MONSTER;
-}
-
-//=========================================================
-// SetYawSpeed - allows each sequence to have a different
-// turn rate associated with it.
-//=========================================================
-void CZombie::SetYawSpeed()
-{
-	int ys;
-
-	ys = 120;
-
-#if 0
-	switch ( m_Activity )
-	{
-	}
-#endif
-
-	pev->yaw_speed = ys;
 }
 
 bool CZombie::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType)
@@ -322,11 +303,6 @@ int CZombie::IgnoreConditions()
 
 	if ((m_Activity == ACT_MELEE_ATTACK1) || (m_Activity == ACT_MELEE_ATTACK1))
 	{
-#if 0
-		if (pev->health < 20)
-			iIgnore |= (bits_COND_LIGHT_DAMAGE|bits_COND_HEAVY_DAMAGE);
-		else
-#endif
 		if (m_flNextFlinch >= gpGlobals->time)
 			iIgnore |= (bits_COND_LIGHT_DAMAGE | bits_COND_HEAVY_DAMAGE);
 	}

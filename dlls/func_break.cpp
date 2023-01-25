@@ -1196,15 +1196,6 @@ void CPushable::Move(CBaseEntity* pOther, bool push)
 	}
 }
 
-#if 0
-void CPushable::StopSound()
-{
-	Vector dist = pev->oldorigin - pev->origin;
-	if ( dist.Length() <= 0 )
-		STOP_SOUND( ENT(pev), CHAN_WEAPON, m_soundNames[m_lastSound] );
-}
-#endif
-
 bool CPushable::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType)
 {
 	if ((pev->spawnflags & SF_PUSH_BREAKABLE) != 0)

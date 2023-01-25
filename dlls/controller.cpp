@@ -47,7 +47,7 @@ public:
 
 	void Spawn() override;
 	void Precache() override;
-	void SetYawSpeed() override;
+	void SetYawSpeed() override { pev->yaw_speed = 120; }
 	int Classify() override;
 	void HandleAnimEvent(MonsterEvent_t* pEvent) override;
 
@@ -160,25 +160,6 @@ int CController::Classify()
 	return m_iClass ? m_iClass : CLASS_ALIEN_MILITARY;
 }
 
-//=========================================================
-// SetYawSpeed - allows each sequence to have a different
-// turn rate associated with it.
-//=========================================================
-void CController::SetYawSpeed()
-{
-	int ys;
-
-	ys = 120;
-
-#if 0
-	switch ( m_Activity )
-	{
-	}
-#endif
-
-	pev->yaw_speed = ys;
-}
-
 bool CController::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType)
 {
 	// HACK HACK -- until we fix this.
@@ -190,14 +171,6 @@ bool CController::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 
 void CController::Killed(entvars_t* pevAttacker, int iGib)
 {
-	// shut off balls
-	/*
-	m_iBall[0] = 0;
-	m_iBallTime[0] = gpGlobals->time + 4.0;
-	m_iBall[1] = 0;
-	m_iBallTime[1] = gpGlobals->time + 4.0;
-	*/
-
 	// fade balls
 	if (m_pBall[0])
 	{
@@ -941,22 +914,6 @@ void CController::Move(float flInterval)
 	if (m_flMoveWaitFinished > gpGlobals->time)
 		return;
 
-// Debug, test movement code
-#if 0
-//	if ( CVAR_GET_FLOAT("stopmove" ) != 0 )
-	{
-		if ( m_movementGoal == MOVEGOAL_ENEMY )
-			RouteSimplify( m_hEnemy );
-		else
-			RouteSimplify( m_hTargetEnt );
-		FRefreshRoute();
-		return;
-	}
-#else
-// Debug, draw the route
-//	DrawRoute( pev, m_Route, m_iRouteIndex, 0, 0, 255 );
-#endif
-
 	// if the monster is moving directly towards an entity (enemy for instance), we'll set this pointer
 	// to that entity for the CheckLocalMove and Triangulate functions.
 	pTargetEnt = NULL;
@@ -964,8 +921,6 @@ void CController::Move(float flInterval)
 	if (m_flGroundSpeed == 0)
 	{
 		m_flGroundSpeed = 100;
-		// TaskFail( );
-		// return;
 	}
 
 	flMoveDist = m_flGroundSpeed * flInterval;
@@ -975,9 +930,6 @@ void CController::Move(float flInterval)
 		// local move to waypoint.
 		vecDir = (m_Route[m_iRouteIndex].vecLocation - pev->origin).Normalize();
 		flWaypointDist = (m_Route[m_iRouteIndex].vecLocation - pev->origin).Length();
-
-		// MakeIdealYaw ( m_Route[ m_iRouteIndex ].vecLocation );
-		// ChangeYaw ( pev->yaw_speed );
 
 		// if the waypoint is closer than CheckDist, CheckDist is the dist to waypoint
 		if (flWaypointDist < DIST_TO_CHECK)
