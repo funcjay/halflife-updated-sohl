@@ -157,7 +157,7 @@ int CHAssassin::ISoundMask()
 //=========================================================
 int CHAssassin::Classify()
 {
-	return m_iClass ? m_iClass : CLASS_HUMAN_MILITARY;
+	return m_iClass != 0 ? m_iClass : CLASS_HUMAN_MILITARY;
 }
 
 //=========================================================
@@ -257,12 +257,9 @@ void CHAssassin::HandleAnimEvent(MonsterEvent_t* pEvent)
 			if (m_pCine->PreciseAttack() && m_hTargetEnt != NULL)
 			{
 				vecToss = VecCheckToss(pev, vecGunPosition, m_hTargetEnt->pev->origin, 0.5);
-				//if (vecToss != g_vecZero)
-				//	ALERT(at_console,"Assassin %s throws precise grenade\n",STRING(pev->targetname));
 			}
 			else
 			{
-				//ALERT(at_console,"Assassin %s throws nonprecise grenade\n",STRING(pev->targetname));
 				// what speed would be best to use, here? Borrowing the hgrunt grenade speed seems silly...
 				vecToss = ((gpGlobals->v_forward * 0.5) + (gpGlobals->v_up * 0.5)).Normalize() * gSkillData.hgruntGrenadeSpeed;
 			}
@@ -278,7 +275,6 @@ void CHAssassin::HandleAnimEvent(MonsterEvent_t* pEvent)
 	break;
 	case ASSASSIN_AE_JUMP:
 	{
-		// ALERT( at_console, "jumping");
 		UTIL_MakeAimVectors(pev->angles);
 		pev->movetype = MOVETYPE_TOSS;
 		pev->flags &= ~FL_ONGROUND;
@@ -290,14 +286,9 @@ void CHAssassin::HandleAnimEvent(MonsterEvent_t* pEvent)
 				Vector vecTemp = m_hTargetEnt->pev->origin;
 				vecTemp.y = vecTemp.y + 50; // put her feet on the target.
 				pev->velocity = VecCheckToss(pev, pev->origin, vecTemp, 0.5);
-				//if (pev->velocity != g_vecZero)
-				//	ALERT(at_console,"Precise jump for assassin %s\n",STRING(pev->targetname));
-				//else
-				//	ALERT(at_console,"Precise jump failed. ");
 			}
 			if (pev->velocity == g_vecZero)
 			{ // just jump, it doesn't matter where to.
-				//ALERT(at_console,"Nonprecise jump for assassin %s\n",STRING(pev->targetname));
 				float flGravity = g_psv_gravity->value;
 				float time = sqrt(160 / (0.5 * flGravity));
 				float speed = flGravity * time / 160;
@@ -325,8 +316,8 @@ void CHAssassin::Spawn()
 {
 	Precache();
 
-	if (pev->model)
-		SET_MODEL(ENT(pev), STRING(pev->model)); //LRC
+	if (!FStringNull(pev->model))
+		SET_MODEL(ENT(pev), (char*)STRING(pev->model)); //LRC
 	else
 		SET_MODEL(ENT(pev), "models/hassassin.mdl");
 	UTIL_SetSize(pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
@@ -356,7 +347,7 @@ void CHAssassin::Spawn()
 //=========================================================
 void CHAssassin::Precache()
 {
-	if (pev->model)
+	if (!FStringNull(pev->model))
 		PRECACHE_MODEL((char*)STRING(pev->model)); //LRC
 	else
 		PRECACHE_MODEL("models/hassassin.mdl");
@@ -383,7 +374,6 @@ Task_t tlAssassinFail[] =
 		{TASK_STOP_MOVING, 0},
 		{TASK_SET_ACTIVITY, (float)ACT_IDLE},
 		{TASK_WAIT_FACE_ENEMY, (float)2},
-		// { TASK_WAIT_PVS,			(float)0		},
 		{TASK_SET_SCHEDULE, (float)SCHED_CHASE_ENEMY},
 };
 
@@ -559,7 +549,6 @@ Schedule_t slAssassinHunt[] =
 		{tlAssassinHunt,
 			ARRAYSIZE(tlAssassinHunt),
 			bits_COND_NEW_ENEMY |
-				// bits_COND_SEE_ENEMY			|
 				bits_COND_CAN_RANGE_ATTACK1 |
 				bits_COND_HEAR_SOUND,
 
@@ -594,7 +583,6 @@ Schedule_t slAssassinJump[] =
 Task_t tlAssassinJumpAttack[] =
 	{
 		{TASK_SET_FAIL_SCHEDULE, (float)SCHED_ASSASSIN_JUMP_LAND},
-		// { TASK_SET_ACTIVITY,		(float)ACT_FLY	},
 		{TASK_ASSASSIN_FALL_TO_GROUND, (float)0},
 };
 
@@ -615,7 +603,6 @@ Schedule_t slAssassinJumpAttack[] =
 Task_t tlAssassinJumpLand[] =
 	{
 		{TASK_SET_FAIL_SCHEDULE, (float)SCHED_ASSASSIN_EXPOSED},
-		// { TASK_SET_FAIL_SCHEDULE,		(float)SCHED_MELEE_ATTACK1	},
 		{TASK_SET_ACTIVITY, (float)ACT_IDLE},
 		{TASK_REMEMBER, (float)bits_MEMORY_BADJUMP},
 		{TASK_FIND_NODE_COVER_FROM_ENEMY, (float)0},
@@ -720,7 +707,7 @@ bool CHAssassin::CheckRangeAttack2(float flDot, float flDist)
 	if (m_iFrustration <= 2)
 		return false;
 
-	if (m_flNextGrenadeCheck < gpGlobals->time && !HasConditions(bits_COND_ENEMY_OCCLUDED) && flDist <= 512 /* && flDot >= 0.5 */ /* && NoFriendlyFire() */)
+	if (m_flNextGrenadeCheck < gpGlobals->time && !HasConditions(bits_COND_ENEMY_OCCLUDED) && flDist <= 512)
 	{
 		Vector vecToss = VecCheckThrow(pev, GetGunPosition(), m_hEnemy->Center(), flDist, 0.5); // use dist as speed to get there in 1 second
 
@@ -855,7 +842,6 @@ void CHAssassin::RunTask(Task_t* pTask)
 		}
 		if ((pev->flags & FL_ONGROUND) != 0)
 		{
-			// ALERT( at_console, "on ground\n");
 			TaskComplete();
 		}
 		break;
@@ -910,14 +896,12 @@ Schedule_t* CHAssassin::GetSchedule()
 		{
 			if ((pev->flags & FL_ONGROUND) != 0)
 			{
-				// ALERT( at_console, "landed\n");
 				// just landed
 				pev->movetype = MOVETYPE_STEP;
 				return GetScheduleOfType(SCHED_ASSASSIN_JUMP_LAND);
 			}
 			else
 			{
-				// ALERT( at_console, "jump\n");
 				// jump or jump/shoot
 				if (m_MonsterState == MONSTERSTATE_COMBAT)
 					return GetScheduleOfType(SCHED_ASSASSIN_JUMP);
@@ -950,21 +934,18 @@ Schedule_t* CHAssassin::GetSchedule()
 		// jump player!
 		if (HasConditions(bits_COND_CAN_MELEE_ATTACK1))
 		{
-			// ALERT( at_console, "melee attack 1\n");
 			return GetScheduleOfType(SCHED_MELEE_ATTACK1);
 		}
 
 		// throw grenade
 		if (HasConditions(bits_COND_CAN_RANGE_ATTACK2))
 		{
-			// ALERT( at_console, "range attack 2\n");
 			return GetScheduleOfType(SCHED_RANGE_ATTACK2);
 		}
 
 		// spotted
 		if (HasConditions(bits_COND_SEE_ENEMY) && HasConditions(bits_COND_ENEMY_FACING_ME))
 		{
-			// ALERT( at_console, "exposed\n");
 			m_iFrustration++;
 			return GetScheduleOfType(SCHED_ASSASSIN_EXPOSED);
 		}
@@ -972,25 +953,21 @@ Schedule_t* CHAssassin::GetSchedule()
 		// can attack
 		if (HasConditions(bits_COND_CAN_RANGE_ATTACK1))
 		{
-			// ALERT( at_console, "range attack 1\n");
 			m_iFrustration = 0;
 			return GetScheduleOfType(SCHED_RANGE_ATTACK1);
 		}
 
 		if (HasConditions(bits_COND_SEE_ENEMY))
 		{
-			// ALERT( at_console, "face\n");
 			return GetScheduleOfType(SCHED_COMBAT_FACE);
 		}
 
 		// new enemy
 		if (HasConditions(bits_COND_NEW_ENEMY))
 		{
-			// ALERT( at_console, "take cover\n");
 			return GetScheduleOfType(SCHED_TAKE_COVER_FROM_ENEMY);
 		}
 
-		// ALERT( at_console, "stand\n");
 		return GetScheduleOfType(SCHED_ALERT_STAND);
 	}
 	break;
@@ -1003,7 +980,6 @@ Schedule_t* CHAssassin::GetSchedule()
 //=========================================================
 Schedule_t* CHAssassin::GetScheduleOfType(int Type)
 {
-	// ALERT( at_console, "%d\n", m_iFrustration );
 	switch (Type)
 	{
 	case SCHED_TAKE_COVER_FROM_ENEMY:

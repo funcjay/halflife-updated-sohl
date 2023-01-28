@@ -247,7 +247,7 @@ void CAmbientGeneric::Precache()
 			m_fActive = true;
 	}
 
-	if (pev->target)
+	if (!FStringNull(pev->target))
 	{
 		CBaseEntity* pTarget = UTIL_FindEntityByTargetname(NULL, STRING(pev->target));
 		if (!pTarget)
@@ -264,10 +264,6 @@ void CAmbientGeneric::Precache()
 		if (m_pPlayFrom)
 		{
 			SetThink(&CAmbientGeneric::StartPlayFrom); //LRC
-													   //			EMIT_SOUND_DYN( m_pPlayFrom, m_iChannel, szSoundFile, //LRC
-													   //					(m_dpv.vol * 0.01), m_flAttenuation, SND_SPAWNING, m_dpv.pitch);
-
-			//			ALERT(at_console, "AMBGEN: spawn start\n");
 		}
 		else
 		{

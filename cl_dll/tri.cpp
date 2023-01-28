@@ -68,7 +68,7 @@ CShinySurface::~CShinySurface()
 
 void CShinySurface::DrawAll(const Vector& org)
 {
-	gEngfuncs.pTriAPI->RenderMode(kRenderTransAdd); //kRenderTransTexture );
+	gEngfuncs.pTriAPI->RenderMode(kRenderTransAdd);
 	gEngfuncs.pTriAPI->CullFace(TRI_NONE);
 
 	for (CShinySurface* pCurrent = this; pCurrent; pCurrent = pCurrent->m_pNext)
@@ -89,24 +89,17 @@ void CShinySurface::Draw(const Vector& org)
 	if (fHeight < 5)
 		return;
 
-	// fade out if we're really close to the surface, so they don't see an ugly repeating texture
-	//	if (fHeight < 15)
-	//		gEngfuncs.pTriAPI->Color4f( 1.0, 1.0, 1.0, (fHeight - 5)*0.1*m_fAlpha );
-	//	else
 	gEngfuncs.pTriAPI->Color4f(1.0, 1.0, 1.0, m_fAlpha);
 
 	// check whether the texture is valid
-	if (!UseTexture(m_hsprSprite, m_szSprite))
+	if (UseTexture(m_hsprSprite, m_szSprite) == 0)
 		return;
-
-	//	gEngfuncs.Con_Printf("minx %f, maxx %f, miny %f, maxy %f\n", m_fMinX, m_fMaxX, m_fMinY, m_fMaxY);
 
 	float fFactor = 1 / (m_fScale * fHeight);
 	float fMinTX = (org.x - m_fMinX) * fFactor;
 	float fMaxTX = (org.x - m_fMaxX) * fFactor;
 	float fMinTY = (org.y - m_fMinY) * fFactor;
 	float fMaxTY = (org.y - m_fMaxY) * fFactor;
-	//	gEngfuncs.pTriAPI->Color4f( 1.0, 1.0, 1.0, m_fAlpha );
 	gEngfuncs.pTriAPI->Begin(TRI_QUADS);
 	gEngfuncs.pTriAPI->TexCoord2f(fMinTX, fMinTY);
 	gEngfuncs.pTriAPI->Vertex3f(m_fMinX, m_fMinY, m_fZ + 0.02); // add 0.02 to avoid z-buffer problems
@@ -130,10 +123,11 @@ void BlackFog()
 	//Not in water and we want fog.
 	static float fColorBlack[3] = {0, 0, 0};
 	bool bFog = g_iWaterLevel < 2 && g_fStartDist > 0 && g_fEndDist > 0;
+	int bOn = bFog ? 1 : 0;
 	if (bFog)
-		gEngfuncs.pTriAPI->Fog(fColorBlack, g_fStartDist, g_fEndDist, bFog);
+		gEngfuncs.pTriAPI->Fog(fColorBlack, g_fStartDist, g_fEndDist, bOn);
 	else
-		gEngfuncs.pTriAPI->Fog(g_fFogColor, g_fStartDist, g_fEndDist, bFog);
+		gEngfuncs.pTriAPI->Fog(g_fFogColor, g_fStartDist, g_fEndDist, bOn);
 }
 
 void RenderFog()
@@ -141,9 +135,7 @@ void RenderFog()
 	//Not in water and we want fog.
 	bool bFog = g_iWaterLevel < 2 && g_fStartDist > 0 && g_fEndDist > 0;
 	if (bFog)
-		gEngfuncs.pTriAPI->Fog(g_fFogColor, g_fStartDist, g_fEndDist, bFog);
-	//	else
-	//		gEngfuncs.pTriAPI->Fog ( g_fFogColor, 10000, 10001, 0 );
+		gEngfuncs.pTriAPI->Fog(g_fFogColor, g_fStartDist, g_fEndDist, bFog ? 1 : 0);
 }
 
 /*

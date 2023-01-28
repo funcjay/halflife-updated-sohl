@@ -28,7 +28,6 @@
 #define SF_MONSTERMAKER_CYCLIC 4		 // drop one monster every time fired.
 #define SF_MONSTERMAKER_MONSTERCLIP 8	 // Children are blocked by monsterclip
 #define SF_MONSTERMAKER_LEAVECORPSE 16	 // Don't fade corpses.
-#define SF_MONSTERMAKER_NO_WPN_DROP 1024 // Corpses don't drop weapons.
 
 //=========================================================
 // MonsterMaker - this ent creates monsters during the game.
@@ -86,7 +85,6 @@ IMPLEMENT_SAVERESTORE(CMonsterMaker, CBaseMonster);
 
 bool CMonsterMaker::KeyValue(KeyValueData* pkvd)
 {
-
 	if (FStrEq(pkvd->szKeyName, "monstercount"))
 	{
 		m_cNumMonsters = atoi(pkvd->szValue);
@@ -148,7 +146,7 @@ void CMonsterMaker::Spawn()
 		SetThink(&CMonsterMaker::MakerThink);
 	}
 
-	if (m_cNumMonsters == 1 || (m_cNumMonsters != -1 && pev->spawnflags & SF_MONSTERMAKER_LEAVECORPSE))
+	if (m_cNumMonsters == 1 || (m_cNumMonsters != -1 && FBitSet(pev->spawnflags, SF_MONSTERMAKER_LEAVECORPSE)))
 	{
 		m_fFadeChildren = false;
 	}
@@ -199,7 +197,7 @@ void CMonsterMaker::TryMakeMonster()
 		return;
 	}
 
-	if (m_fSpawnDelay)
+	if (m_fSpawnDelay != 0)
 	{
 		// If I have a target, fire. (no locus)
 		if (!FStringNull(pev->target))
@@ -208,13 +206,11 @@ void CMonsterMaker::TryMakeMonster()
 			FireTargets(STRING(pev->target), this, this, USE_TOGGLE, 0);
 		}
 
-		//		ALERT(at_console,"Making Monster in %f seconds\n",m_fSpawnDelay);
 		SetThink(&CMonsterMaker::MakeMonsterThink);
 		SetNextThink(m_fSpawnDelay);
 	}
 	else
 	{
-		//		ALERT(at_console,"No delay. Making monster.\n",m_fSpawnDelay);
 		CBaseMonster* pMonst = MakeMonster();
 
 		// If I have a target, fire! (the new monster is the locus)
@@ -241,8 +237,6 @@ CBaseMonster* CMonsterMaker::MakeMonster()
 	edict_t* pent;
 	entvars_t* pevCreate;
 
-	//	ALERT(at_console,"Making Monster NOW\n");
-
 	pent = CREATE_NAMED_ENTITY(m_iszMonsterClassname);
 
 	if (FNullEnt(pent))
@@ -256,11 +250,8 @@ CBaseMonster* CMonsterMaker::MakeMonster()
 	pevCreate->angles = pev->angles;
 	SetBits(pevCreate->spawnflags, SF_MONSTER_FALL_TO_GROUND);
 
-	if (pev->spawnflags & SF_MONSTERMAKER_NO_WPN_DROP)
-		SetBits(pevCreate->spawnflags, SF_MONSTER_NO_WPN_DROP);
-
 	// Children hit monsterclip brushes
-	if ((pev->spawnflags & SF_MONSTERMAKER_MONSTERCLIP) != 0)
+	if (FBitSet(pev->spawnflags, SF_MONSTERMAKER_MONSTERCLIP))
 		SetBits(pevCreate->spawnflags, SF_MONSTER_HITMONSTERCLIP);
 
 	DispatchSpawn(ENT(pevCreate));
@@ -306,7 +297,6 @@ CBaseMonster* CMonsterMaker::MakeMonster()
 void CMonsterMaker::CyclicUse(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value)
 {
 	TryMakeMonster();
-	//	ALERT(at_console,"CyclicUse complete\n");
 }
 
 //=========================================================

@@ -36,7 +36,7 @@ public:
 	int Classify() override { return CLASS_ALIEN_MILITARY; }
 	int BloodColor() override { return BLOOD_COLOR_YELLOW; }
 	void Killed(entvars_t* pevAttacker, int iGib) override;
-	void GibMonster() override;
+	void GibMonster() override {}
 
 	void SetObjectCollisionBox() override
 	{
@@ -79,8 +79,6 @@ public:
 	static const char* pLaughSounds[];	  // vocalization: play sometimes when hit and still has lots of health
 	static const char* pPainSounds[];	  // vocalization: play sometimes when hit and has much less health and no more chargers
 	static const char* pDeathSounds[];	  // vocalization: play as he dies
-
-	// x_teleattack1.wav	the looping sound of the teleport attack ball.
 
 	float m_flForce;
 
@@ -198,8 +196,6 @@ public:
 
 	CBaseEntity* RandomClassname(const char* szName);
 
-	// void EXPORT SphereUse( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value );
-
 	void MovetoTarget(Vector vecTarget);
 	virtual void Crawl();
 
@@ -282,11 +278,10 @@ void CNihilanth::Spawn()
 	pev->movetype = MOVETYPE_FLY;
 	pev->solid = SOLID_BBOX;
 
-	if (pev->model)
-		SET_MODEL(ENT(pev), STRING(pev->model)); //LRC
+	if (!FStringNull(pev->model))
+		SET_MODEL(ENT(pev), (char*)STRING(pev->model)); //LRC
 	else
 		SET_MODEL(edict(), "models/nihilanth.mdl");
-	// UTIL_SetSize(pev, Vector( -300, -300, 0), Vector(300, 300, 512));
 	UTIL_SetSize(pev, Vector(-32, -32, 0), Vector(32, 32, 64));
 	UTIL_SetOrigin(this, pev->origin);
 
@@ -324,20 +319,12 @@ void CNihilanth::Spawn()
 		strcpy(m_szDeadUse, "n_dead");
 	if (m_szDeadTouch[0] == '\0')
 		strcpy(m_szDeadTouch, "n_ending");
-
-	// near death
-	/*
-	m_iTeleport = 10;
-	m_iLevel = 10;
-	m_irritation = 2;
-	pev->health = 100;
-	*/
 }
 
 
 void CNihilanth::Precache()
 {
-	if (pev->model)
+	if (!FStringNull(pev->model))
 		PRECACHE_MODEL((char*)STRING(pev->model)); //LRC
 	else
 		PRECACHE_MODEL("models/nihilanth.mdl");
@@ -560,13 +547,6 @@ void CNihilanth::CrashTouch(CBaseEntity* pOther)
 		SetTouch(NULL);
 		SetNextThink(0);
 	}
-}
-
-
-
-void CNihilanth::GibMonster()
-{
-	// EMIT_SOUND_DYN(edict(), CHAN_VOICE, "common/bodysplat.wav", 0.75, ATTN_NORM, 0, 200);
 }
 
 

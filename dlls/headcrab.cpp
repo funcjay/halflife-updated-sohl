@@ -152,7 +152,7 @@ const char* CHeadCrab::pBiteSounds[] =
 //=========================================================
 int CHeadCrab::Classify()
 {
-	return m_iClass ? m_iClass : CLASS_ALIEN_PREY;
+	return m_iClass != 0 ? m_iClass : CLASS_ALIEN_PREY;
 }
 
 //=========================================================
@@ -275,8 +275,8 @@ void CHeadCrab::Spawn()
 {
 	Precache();
 
-	if (pev->model)
-		SET_MODEL(ENT(pev), STRING(pev->model)); //LRC
+	if (!FStringNull(pev->model))
+		SET_MODEL(ENT(pev), (char*)STRING(pev->model)); //LRC
 	else
 		SET_MODEL(ENT(pev), "models/headcrab.mdl");
 	UTIL_SetSize(pev, Vector(-12, -12, 0), Vector(12, 12, 24));
@@ -307,7 +307,7 @@ void CHeadCrab::Precache()
 	PRECACHE_SOUND_ARRAY(pDeathSounds);
 	PRECACHE_SOUND_ARRAY(pBiteSounds);
 
-	if (pev->model)
+	if (!FStringNull(pev->model))
 		PRECACHE_MODEL((char*)STRING(pev->model)); //LRC
 	else
 		PRECACHE_MODEL("models/headcrab.mdl");
@@ -473,7 +473,7 @@ class CBabyCrab : public CHeadCrab
 public:
 	void Spawn() override;
 	void Precache() override;
-	void SetYawSpeed() override;
+	void SetYawSpeed() override { pev->yaw_speed = 120; }
 	float GetDamageAmount() override { return gSkillData.headcrabDmgBite * 0.3; }
 	bool CheckRangeAttack1(float flDot, float flDist) override;
 	Schedule_t* GetScheduleOfType(int Type) override;
@@ -485,8 +485,8 @@ LINK_ENTITY_TO_CLASS(monster_babycrab, CBabyCrab);
 void CBabyCrab::Spawn()
 {
 	CHeadCrab::Spawn();
-	if (pev->model)
-		SET_MODEL(ENT(pev), STRING(pev->model)); //LRC
+	if (!FStringNull(pev->model))
+		SET_MODEL(ENT(pev), (char*)STRING(pev->model)); //LRC
 	else
 		SET_MODEL(ENT(pev), "models/baby_headcrab.mdl");
 	pev->rendermode = kRenderTransTexture;
@@ -498,17 +498,11 @@ void CBabyCrab::Spawn()
 
 void CBabyCrab::Precache()
 {
-	if (pev->model)
+	if (!FStringNull(pev->model))
 		PRECACHE_MODEL((char*)STRING(pev->model)); //LRC
 	else
 		PRECACHE_MODEL("models/baby_headcrab.mdl");
 	CHeadCrab::Precache();
-}
-
-
-void CBabyCrab::SetYawSpeed()
-{
-	pev->yaw_speed = 120;
 }
 
 

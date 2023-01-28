@@ -486,7 +486,7 @@ V_CalcRefdef
 
 ==================
 */
-extern void RenderFog(void); //LRC
+extern void RenderFog(); //LRC
 
 void V_CalcNormalRefdef(struct ref_params_s* pparams)
 {

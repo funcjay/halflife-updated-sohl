@@ -340,14 +340,13 @@ void CGameText::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useT
 		}
 	}
 
-	if (pev->target)
+	if (!FStringNull(pev->target))
 	{
 		m_pActivator = pActivator;
 		SetThink(&CGameText::TriggerThink);
 		SetNextThink(m_textParms.fadeinTime + m_textParms.holdTime + m_textParms.fadeoutTime);
-		//		ALERT(at_console, "GameText sets NextThink = %f\n", m_textParms.fadeinTime + m_textParms.holdTime + m_textParms.fadeoutTime);
 	}
-	else if (pev->spawnflags & SF_ENVTEXT_ONLY_ONCE)
+	else if (FBitSet(pev->spawnflags, SF_ENVTEXT_ONLY_ONCE))
 	{
 		SetThink(&CGameText::SUB_Remove);
 		SetNextThink(0.1);
@@ -357,10 +356,9 @@ void CGameText::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useT
 //LRC
 void CGameText::TriggerThink()
 {
-	//	ALERT(at_console, "GameText uses targets\n");
 	SUB_UseTargets(m_pActivator, USE_TOGGLE, 0);
 
-	if (pev->spawnflags & SF_ENVTEXT_ONLY_ONCE)
+	if (FBitSet(pev->spawnflags, SF_ENVTEXT_ONLY_ONCE))
 	{
 		SetThink(&CGameText::SUB_Remove);
 		SetNextThink(0.1);

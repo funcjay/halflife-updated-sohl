@@ -240,7 +240,7 @@ typedef enum
 //=========================================================
 int CTentacle::Classify()
 {
-	return m_iClass ? m_iClass : CLASS_ALIEN_MONSTER;
+	return m_iClass != 0 ? m_iClass : CLASS_ALIEN_MONSTER;
 }
 
 //

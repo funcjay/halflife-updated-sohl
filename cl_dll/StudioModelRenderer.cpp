@@ -1236,17 +1236,17 @@ bool CStudioModelRenderer::StudioDrawModel(int flags)
 											   // the opposite faces of the tris. This should really be TRI_BACK, but that's not available. :(
 											   //		glCullFace(GL_BACK);
 
-		if (flags & STUDIO_RENDER)
+		if ((flags & STUDIO_RENDER) != 0)
 		{
 			// see if the bounding box lets us trivially reject, also sets
-			if (!IEngineStudio.StudioCheckBBox())
-				return 0;
+			if (IEngineStudio.StudioCheckBBox() == 0)
+				return false;
 
 			(*m_pModelsDrawn)++;
 			(*m_pStudioModelCount)++; // render data cache cookie
 
 			if (m_pStudioHeader->numbodyparts == 0)
-				return 1;
+				return true;
 		}
 
 		if (m_pCurrentEntity->curstate.movetype == MOVETYPE_FOLLOW)
@@ -1259,7 +1259,7 @@ bool CStudioModelRenderer::StudioDrawModel(int flags)
 		}
 		StudioSaveBones();
 
-		if (flags & STUDIO_EVENTS)
+		if ((flags & STUDIO_EVENTS) != 0)
 		{
 			StudioCalcAttachments();
 			IEngineStudio.StudioClientEvents();
@@ -1272,7 +1272,7 @@ bool CStudioModelRenderer::StudioDrawModel(int flags)
 			}
 		}
 
-		if (flags & STUDIO_RENDER)
+		if ((flags & STUDIO_RENDER) != 0)
 		{
 			lighting.plightvec = dir;
 			IEngineStudio.StudioDynamicLight(m_pCurrentEntity, &lighting);

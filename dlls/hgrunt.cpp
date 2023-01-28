@@ -193,15 +193,12 @@ TYPEDESCRIPTION CHGrunt::m_SaveData[] =
 	{
 		DEFINE_FIELD(CHGrunt, m_flNextGrenadeCheck, FIELD_TIME),
 		DEFINE_FIELD(CHGrunt, m_flNextPainTime, FIELD_TIME),
-		//	DEFINE_FIELD( CHGrunt, m_flLastEnemySightTime, FIELD_TIME ), // don't save, go to zero
 		DEFINE_FIELD(CHGrunt, m_vecTossVelocity, FIELD_VECTOR),
 		DEFINE_FIELD(CHGrunt, m_fThrowGrenade, FIELD_BOOLEAN),
 		DEFINE_FIELD(CHGrunt, m_fStanding, FIELD_BOOLEAN),
 		DEFINE_FIELD(CHGrunt, m_fFirstEncounter, FIELD_BOOLEAN),
 		DEFINE_FIELD(CHGrunt, m_cClipSize, FIELD_INTEGER),
 		DEFINE_FIELD(CHGrunt, m_voicePitch, FIELD_INTEGER),
-		//  DEFINE_FIELD( CShotgun, m_iBrassShell, FIELD_INTEGER ),
-		//  DEFINE_FIELD( CShotgun, m_iShotgunShell, FIELD_INTEGER ),
 		DEFINE_FIELD(CHGrunt, m_iSentence, FIELD_INTEGER),
 };
 
@@ -264,7 +261,7 @@ void CHGrunt::SpeakSentence()
 int CHGrunt::IRelationship(CBaseEntity* pTarget)
 {
 	//LRC- only hate alien grunts if my behaviour hasn't been overridden
-	if (!m_iClass && FClassnameIs(pTarget->pev, "monster_alien_grunt") || (FClassnameIs(pTarget->pev, "monster_gargantua")))
+	if (m_iClass == 0 && FClassnameIs(pTarget->pev, "monster_alien_grunt") || (FClassnameIs(pTarget->pev, "monster_gargantua")))
 	{
 		return R_NM;
 	}
@@ -280,7 +277,7 @@ void CHGrunt::GibMonster()
 	Vector vecGunPos;
 	Vector vecGunAngles;
 
-	if (GetBodygroup(2) != 2 && !(pev->spawnflags & SF_MONSTER_NO_WPN_DROP))
+	if (GetBodygroup(2) != 2 && m_AllowItemDropping)
 	{ // throw a gun if the grunt has one
 		GetAttachment(0, vecGunPos, vecGunAngles);
 
@@ -343,10 +340,6 @@ bool CHGrunt::FOkToSpeak()
 			return false;
 		}
 	}
-
-	// if player is not in pvs, don't speak
-	//	if (FNullEnt(FIND_CLIENT_IN_PVS(edict())))
-	//		return false;
 
 	return true;
 }
@@ -516,14 +509,10 @@ bool CHGrunt::CheckRangeAttack2(float flDot, float flDist)
 			// toss it to where you last saw them
 			vecTarget = m_vecEnemyLKP;
 		}
-		// vecTarget = m_vecEnemyLKP + (m_hEnemy->BodyTarget( pev->origin ) - m_hEnemy->pev->origin);
-		// estimate position
-		// vecTarget = vecTarget + m_hEnemy->pev->velocity * 2;
 	}
 	else
 	{
 		// find target
-		// vecTarget = m_hEnemy->BodyTarget( pev->origin );
 		vecTarget = m_vecEnemyLKP + (m_hEnemy->BodyTarget(pev->origin) - m_hEnemy->pev->origin);
 		// estimate position
 		if (HasConditions(bits_COND_SEE_ENEMY))
@@ -741,7 +730,7 @@ void CHGrunt::CheckAmmo()
 //=========================================================
 int CHGrunt::Classify()
 {
-	return m_iClass ? m_iClass : CLASS_HUMAN_MILITARY;
+	return m_iClass != 0 ? m_iClass : CLASS_HUMAN_MILITARY;
 }
 
 //=========================================================
@@ -852,7 +841,7 @@ void CHGrunt::HandleAnimEvent(MonsterEvent_t* pEvent)
 	{
 	case HGRUNT_AE_DROP_GUN:
 	{
-		if (pev->spawnflags & SF_MONSTER_NO_WPN_DROP)
+		if (!m_AllowItemDropping)
 			break; //LRC
 
 		Vector vecGunPos;
@@ -888,7 +877,6 @@ void CHGrunt::HandleAnimEvent(MonsterEvent_t* pEvent)
 	case HGRUNT_AE_GREN_TOSS:
 	{
 		UTIL_MakeVectors(pev->angles);
-		// CGrenade::ShootTimed( pev, pev->origin + gpGlobals->v_forward * 34 + Vector (0, 0, 32), m_vecTossVelocity, 3.5 );
 		//LRC - a bit of a hack. Ideally the grunts would work out in advance whether it's ok to throw.
 		if (m_pCine)
 		{
@@ -1023,8 +1011,8 @@ void CHGrunt::Spawn()
 {
 	Precache();
 
-	if (pev->model)
-		SET_MODEL(ENT(pev), STRING(pev->model)); //LRC
+	if (!FStringNull(pev->model))
+		SET_MODEL(ENT(pev), (char*)STRING(pev->model)); //LRC
 	else
 		SET_MODEL(ENT(pev), "models/hgrunt.mdl");
 	UTIL_SetSize(pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
@@ -1052,8 +1040,6 @@ void CHGrunt::Spawn()
 	{
 		// initialize to original values
 		pev->weapons = HGRUNT_9MMAR | HGRUNT_HANDGRENADE;
-		// pev->weapons = HGRUNT_SHOTGUN;
-		// pev->weapons = HGRUNT_9MMAR | HGRUNT_GRENADELAUNCHER;
 	}
 
 	if (FBitSet(pev->weapons, HGRUNT_SHOTGUN))
@@ -1092,7 +1078,7 @@ void CHGrunt::Spawn()
 //=========================================================
 void CHGrunt::Precache()
 {
-	if (pev->model)
+	if (!FStringNull(pev->model))
 		PRECACHE_MODEL((char*)STRING(pev->model)); //LRC
 	else
 		PRECACHE_MODEL("models/hgrunt.mdl");
@@ -1904,7 +1890,7 @@ void CHGrunt::SetActivity(Activity NewActivity)
 			iSequence = LookupSequence("throwgrenade");
 		}
 		// LRC: added a test to stop a marine without a launcher from firing.
-		else if (pev->weapons & HGRUNT_GRENADELAUNCHER)
+		else if (FBitSet(pev->weapons, HGRUNT_GRENADELAUNCHER))
 		{
 			// get launch anim
 			iSequence = LookupSequence("launchgrenade");
@@ -1975,7 +1961,6 @@ void CHGrunt::SetActivity(Activity NewActivity)
 //=========================================================
 Schedule_t* CHGrunt::GetSchedule()
 {
-
 	// clear old sentence
 	m_iSentence = HGRUNT_SENT_NONE;
 
@@ -2024,12 +2009,6 @@ Schedule_t* CHGrunt::GetSchedule()
 				}
 				return GetScheduleOfType(SCHED_TAKE_COVER_FROM_BEST_SOUND);
 			}
-			/*
-			if (!HasConditions( bits_COND_SEE_ENEMY ) && ( pSound->m_iType & (bits_SOUND_PLAYER | bits_SOUND_COMBAT) ))
-			{
-				MakeIdealYaw( pSound->m_vecOrigin );
-			}
-			*/
 		}
 	}
 	switch (m_MonsterState)
@@ -2115,9 +2094,7 @@ Schedule_t* CHGrunt::GetSchedule()
 				//!!!KELLY - this grunt was hit and is going to run to cover.
 				if (FOkToSpeak()) // && RANDOM_LONG(0,1))
 				{
-					//SENTENCEG_PlayRndSz( ENT(pev), "HG_COVER", HGRUNT_SENTENCE_VOLUME, GRUNT_ATTN, 0, m_voicePitch);
 					m_iSentence = HGRUNT_SENT_COVER;
-					//JustSpoke();
 				}
 				return GetScheduleOfType(SCHED_TAKE_COVER_FROM_ENEMY);
 			}
@@ -2188,9 +2165,7 @@ Schedule_t* CHGrunt::GetSchedule()
 				// charge the enemy's position.
 				if (FOkToSpeak()) // && RANDOM_LONG(0,1))
 				{
-					//SENTENCEG_PlayRndSz( ENT(pev), "HG_CHARGE", HGRUNT_SENTENCE_VOLUME, GRUNT_ATTN, 0, m_voicePitch);
 					m_iSentence = HGRUNT_SENT_CHARGE;
-					//JustSpoke();
 				}
 
 				return GetScheduleOfType(SCHED_GRUNT_ESTABLISH_LINE_OF_FIRE);
@@ -2408,11 +2383,7 @@ void CHGruntRepel::RepelUse(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_T
 {
 	TraceResult tr;
 	UTIL_TraceLine(pev->origin, pev->origin + Vector(0, 0, -4096.0), dont_ignore_monsters, ENT(pev), &tr);
-	/*
-	if ( tr.pHit && Instance( tr.pHit )->pev->solid != SOLID_BSP) 
-		return NULL;
-	*/
-
+	
 	CBaseEntity* pEntity = Create("monster_human_grunt", pev->origin, pev->angles);
 	CBaseMonster* pGrunt = pEntity->MyMonsterPointer();
 	pGrunt->pev->movetype = MOVETYPE_FLY;

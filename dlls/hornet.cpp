@@ -153,9 +153,10 @@ int CHornet::IRelationship(CBaseEntity* pTarget)
 //=========================================================
 int CHornet::Classify()
 {
-	if (m_iClass)
+	if (m_iClass != 0)
 		return m_iClass;
-	if (pev->owner && (pev->owner->v.flags & FL_CLIENT) != 0)
+
+	if (pev->owner && FBitSet(pev->owner->v.flags, FL_CLIENT))
 	{
 		return CLASS_PLAYER_BIOWEAPON;
 	}

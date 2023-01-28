@@ -32,7 +32,7 @@ class CGMan : public CBaseMonster
 public:
 	void Spawn() override;
 	void Precache() override;
-	void SetYawSpeed() override;
+	void SetYawSpeed() override { pev->yaw_speed = 90; }
 	int Classify() override;
 	void HandleAnimEvent(MonsterEvent_t* pEvent) override;
 	int ISoundMask() override;
@@ -69,25 +69,7 @@ IMPLEMENT_SAVERESTORE(CGMan, CBaseMonster);
 //=========================================================
 int CGMan::Classify()
 {
-	return m_iClass ? m_iClass : CLASS_NONE;
-}
-
-//=========================================================
-// SetYawSpeed - allows each sequence to have a different
-// turn rate associated with it.
-//=========================================================
-void CGMan::SetYawSpeed()
-{
-	int ys;
-
-	switch (m_Activity)
-	{
-	case ACT_IDLE:
-	default:
-		ys = 90;
-	}
-
-	pev->yaw_speed = ys;
+	return m_iClass != 0 ? m_iClass : CLASS_NONE;
 }
 
 //=========================================================
@@ -120,8 +102,8 @@ void CGMan::Spawn()
 {
 	Precache();
 
-	if (pev->model)
-		SET_MODEL(ENT(pev), STRING(pev->model)); //LRC
+	if (!FStringNull(pev->model))
+		SET_MODEL(ENT(pev), (char*)STRING(pev->model)); //LRC
 	else
 		SET_MODEL(ENT(pev), "models/gman.mdl");
 	UTIL_SetSize(pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
@@ -141,7 +123,7 @@ void CGMan::Spawn()
 //=========================================================
 void CGMan::Precache()
 {
-	if (pev->model)
+	if (!FStringNull(pev->model))
 		PRECACHE_MODEL((char*)STRING(pev->model)); //LRC
 	else
 		PRECACHE_MODEL("models/gman.mdl");

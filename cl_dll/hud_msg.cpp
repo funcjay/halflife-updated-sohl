@@ -160,7 +160,7 @@ void CHud ::MsgFunc_KeyedDLight(const char* pszName, int iSize, void* pbuf)
 	dlight_t* dl = gEngfuncs.pEfxAPI->CL_AllocDlight(iKey);
 
 	int bActive = READ_BYTE();
-	if (!bActive)
+	if (bActive == 0)
 	{
 		// die instantly
 		dl->die = gEngfuncs.GetClientTime();

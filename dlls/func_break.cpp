@@ -181,13 +181,13 @@ void CBreakable::Spawn()
 	else
 		pev->takedamage = DAMAGE_YES;
 
-	if (m_iClass) //LRC - might these additions cause problems?
+	if (m_iClass != 0) //LRC - might these additions cause problems?
 	{
 		pev->flags |= FL_MONSTER;
 		pev->view_ofs = (pev->maxs + pev->mins) / 2;
 	}
 
-	if (m_iszWhenHit) //LRC - locus trigger
+	if (!FStringNull(m_iszWhenHit)) // LRC - locus trigger
 	{
 		m_pHitProxy = GetClassPtr((CPointEntity*)NULL);
 	}
@@ -226,9 +226,9 @@ void CBreakable::Spawn()
 
 STATE CBreakable::GetState()
 {
-	if (m_iRespawnTime)
+	if (m_iRespawnTime != 0)
 	{
-		if (pev->effects & EF_NODRAW)
+		if (FBitSet(pev->effects, EF_NODRAW))
 			return STATE_OFF;
 		else
 			return STATE_ON;
@@ -546,8 +546,9 @@ void CBreakable::BreakTouch(CBaseEntity* pOther)
 void CBreakable::BreakUse(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value)
 {
 	// for a respawnable entity, ON means someone wants it to respawn- but this one's solid already.
-	if (m_iRespawnTime && useType == USE_ON)
+	if (m_iRespawnTime != 0 && useType == USE_ON)
 		return;
+
 	if (IsBreakable())
 	{
 		pev->angles.y = m_angle;
@@ -572,7 +573,6 @@ void CBreakable::RespawnUse(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_T
 		}
 		return;
 	}
-	//	ALERT(at_debug,"Respawn trigger received\n");
 	SetThink(&CBreakable::RespawnThink);
 	SetNextThink(0.1);
 }
@@ -580,20 +580,18 @@ void CBreakable::RespawnUse(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_T
 //LRC
 void CBreakable::RespawnThink()
 {
-	//	ALERT(at_debug,"RespawnThink: ");
 	CBaseEntity* pList[2];
 	int count = UTIL_EntitiesInBox(pList, 2, pev->mins, pev->maxs, FL_MONSTER | FL_CLIENT);
-	if (count)
+	if (count != 0)
 	{
 		// Can't respawn right now, a monster or player is in the way. Wait a bit.
-		//		ALERT(at_debug,"Respawn failed, count is %d\n",count);
 		SetThink(&CBreakable::RespawnThink);
 		SetNextThink(2); // CONSIDER: change this number?
 	}
 	else
 	{
 		// fade in, don't just appear(?)
-		if (pev->spawnflags & SF_BREAK_FADE_RESPAWN)
+		if (FBitSet(pev->spawnflags, SF_BREAK_FADE_RESPAWN))
 		{
 			SetThink(&CBreakable::RespawnFadeThink);
 			SetNextThink(0.1);
@@ -604,7 +602,6 @@ void CBreakable::RespawnThink()
 				m_iInitialRenderAmt = 255;
 			}
 		}
-		//		ALERT(at_debug,"Respawn OK\n");
 		pev->solid = SOLID_BSP;
 		pev->effects &= ~EF_NODRAW;
 		pev->health = m_iInitialHealth;
@@ -620,7 +617,6 @@ void CBreakable::RespawnThink()
 void CBreakable::RespawnFadeThink()
 {
 	int newamt = V_min(pev->renderamt + 50, m_iInitialRenderAmt);
-	//	ALERT(at_debug, "FadeThink: %d changed to %d\n",pev->renderamt,newamt);
 	pev->renderamt = newamt;
 	if (pev->renderamt < m_iInitialRenderAmt)
 	{
@@ -663,7 +659,7 @@ void CBreakable::TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecD
 	}
 
 	//LRC
-	if (m_iszWhenHit)
+	if (!FStringNull(m_iszWhenHit))
 	{
 		m_pHitProxy->pev->origin = ptr->vecEndPos;
 		m_pHitProxy->pev->velocity = vecDir;
@@ -903,7 +899,7 @@ void CBreakable::Die()
 	}
 
 	// If I'm getting removed, don't fire something that could fire myself
-	if (!m_iRespawnTime)
+	if (m_iRespawnTime == 0)
 		pev->targetname = 0;
 
 	pev->solid = SOLID_NOT;
@@ -920,19 +916,15 @@ void CBreakable::Die()
 
 	if (m_iRespawnTime == -1)
 	{
-		//		ALERT(at_debug,"Waiting for respawn trigger\n");
 		SetUse(&CBreakable::RespawnUse);
 	}
-	else if (m_iRespawnTime)
+	else if (m_iRespawnTime != 0)
 	{
-		//		ALERT(at_debug,"Respawning in %d secs\n",m_iRespawnTime);
 		SetThink(&CBreakable::RespawnThink);
 		SetNextThink(m_iRespawnTime);
 	}
 	else
 	{
-		//		ALERT(at_debug,"No respawn\n");
-
 		//tidy up
 		if (m_pHitProxy)
 		{
@@ -943,7 +935,6 @@ void CBreakable::Die()
 
 		SetThink(&CBreakable::SUB_Remove);
 		SetNextThink(0.1);
-		//		ALERT(at_console, "Set SUB_Remove\n");
 	}
 
 	if (!FStringNull(m_iszSpawnObject))
@@ -985,7 +976,6 @@ public:
 	bool KeyValue(KeyValueData* pkvd) override;
 	void Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value) override;
 	void EXPORT StopSound();
-	//	virtual void	SetActivator( CBaseEntity *pActivator ) { m_pPusher = pActivator; }
 
 	int ObjectCaps() override { return (CBaseEntity::ObjectCaps() & ~FCAP_ACROSS_TRANSITION) | FCAP_CONTINUOUS_USE; }
 	bool Save(CSave& save) override;
@@ -1030,8 +1020,6 @@ void CPushable::Spawn()
 	pev->movetype = MOVETYPE_PUSHSTEP;
 	pev->solid = SOLID_BBOX;
 	SET_MODEL(ENT(pev), STRING(pev->model));
-
-	//	UTIL_SetSize( pev, vecMins, vecMaxs );
 
 	if (pev->friction > 399)
 		pev->friction = 399;
@@ -1102,12 +1090,12 @@ void CPushable::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useT
 {
 	if (!pActivator || !pActivator->IsPlayer())
 	{
-		if ((pev->spawnflags & SF_PUSH_BREAKABLE) != 0)
+		if (FBitSet(pev->spawnflags, SF_PUSH_BREAKABLE))
 			this->CBreakable::Use(pActivator, pCaller, useType, value);
 		return;
 	}
 
-	if (pev->spawnflags & SF_PUSH_NOPULL)
+	if (FBitSet(pev->spawnflags, SF_PUSH_NOPULL))
 		return; //LRC: a non-pullable pushable.
 
 	if (pActivator->pev->velocity != g_vecZero)
@@ -1187,8 +1175,6 @@ void CPushable::Move(CBaseEntity* pOther, bool push)
 			{
 				m_lastSound = RANDOM_LONG(0, 2);
 				EMIT_SOUND(ENT(pev), CHAN_WEAPON, m_soundNames[m_lastSound], 0.5, ATTN_NORM);
-				//			SetThink( StopSound );
-				//			SetNextThink( 0.1 );
 			}
 			else
 				STOP_SOUND(ENT(pev), CHAN_WEAPON, m_soundNames[m_lastSound]);

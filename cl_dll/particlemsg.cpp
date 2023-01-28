@@ -16,7 +16,7 @@ extern ParticleSystemManager* g_pParticleSystems;
 
 DECLARE_MESSAGE(m_Particle, Particle)
 
-bool CHudParticle::Init(void)
+bool CHudParticle::Init()
 {
 	ConsolePrint("Hooking Particle message\n"); // 30/08/02 November235: Just a debug
 	HOOK_MESSAGE(Particle);
@@ -33,7 +33,7 @@ bool CHudParticle::Init(void)
 	return true;
 };
 
-bool CHudParticle::VidInit(void)
+bool CHudParticle::VidInit()
 {
 	g_pParticleSystems->ClearSystems();
 	return true;

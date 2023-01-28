@@ -252,7 +252,8 @@ void FireTargets(const char* targetName, CBaseEntity* pActivator, CBaseEntity* p
 	const char* inputTargetName = targetName;
 	CBaseEntity* inputActivator = pActivator;
 	CBaseEntity* pTarget = NULL;
-	int i, j, found = false;
+	int i, j;
+	bool found = false;
 	char szBuf[80];
 
 	if (!targetName)
@@ -278,12 +279,12 @@ void FireTargets(const char* targetName, CBaseEntity* pActivator, CBaseEntity* p
 	if (!pTarget)
 	{
 		// it's not an entity name; check for a locus specifier, e.g: "fadein(mywall)"
-		for (i = 0; targetName[i]; i++)
+		for (i = 0; targetName[i] != NULL; i++)
 		{
 			if (targetName[i] == '(')
 			{
 				i++;
-				for (j = i; targetName[j]; j++)
+				for (j = i; targetName[j] != NULL; j++)
 				{
 					if (targetName[j] == ')')
 					{
@@ -292,10 +293,8 @@ void FireTargets(const char* targetName, CBaseEntity* pActivator, CBaseEntity* p
 						pActivator = UTIL_FindEntityByTargetname(NULL, szBuf, inputActivator);
 						if (!pActivator)
 						{
-							//ALERT(at_console, "Missing activator \"%s\"\n", szBuf);
 							return; // it's a locus specifier, but the locus is invalid.
 						}
-						//ALERT(at_console, "Found activator \"%s\"\n", STRING(pActivator->pev->targetname));
 						found = true;
 						break;
 					}
@@ -333,7 +332,7 @@ void FireTargets(const char* targetName, CBaseEntity* pActivator, CBaseEntity* p
 			}
 		}
 		pTarget = UTIL_FindEntityByTargetname(pTarget, targetName, inputActivator);
-	} while (pTarget);
+	} while (!FNullEnt(pTarget));
 
 	//LRC- Firing has finished, aliases can now reflect their new values.
 	UTIL_FlushAliases();
@@ -831,19 +830,19 @@ public:
 	void Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value) override;
 	int ObjectCaps() override { return CBaseEntity::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 
-	STATE GetState() override { return (pev->spawnflags & SF_IMW_INACTIVE) ? STATE_OFF : STATE_ON; }
+	STATE GetState() override { return FBitSet(pev->spawnflags, SF_IMW_INACTIVE) ? STATE_OFF : STATE_ON; }
 };
 
 LINK_ENTITY_TO_CLASS(info_movewith, CInfoMoveWith);
 
 void CInfoMoveWith::Spawn()
 {
-	if (pev->spawnflags & SF_IMW_INACTIVE)
+	if (FBitSet(pev->spawnflags, SF_IMW_INACTIVE))
 		m_MoveWith = pev->netname;
 	else
 		m_MoveWith = pev->target;
 
-	if (pev->spawnflags & SF_IMW_BLOCKABLE)
+	if (FBitSet(pev->spawnflags, SF_IMW_BLOCKABLE))
 	{
 		pev->solid = SOLID_SLIDEBOX;
 		pev->movetype = MOVETYPE_FLY;
@@ -886,7 +885,7 @@ void CInfoMoveWith::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE 
 		m_pSiblingMoveWith = NULL;
 	}
 
-	if (pev->spawnflags & SF_IMW_INACTIVE)
+	if (FBitSet(pev->spawnflags, SF_IMW_INACTIVE))
 	{
 		pev->spawnflags &= ~SF_IMW_INACTIVE;
 		m_MoveWith = pev->target;
@@ -898,7 +897,7 @@ void CInfoMoveWith::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE 
 	}
 
 	// set things up for the new m_MoveWith value
-	if (!m_MoveWith)
+	if (m_MoveWith == NULL)
 	{
 		UTIL_SetVelocity(this, g_vecZero); // come to a stop
 		return;

@@ -50,7 +50,7 @@ public:
 	bool Restore(CRestore& restore) override;
 	static TYPEDESCRIPTION m_SaveData[];
 
-	bool HasCustomGibs() override { return m_iszGibModel; }
+	bool HasCustomGibs() override { return !FStringNull(m_iszGibModel); }
 
 	int m_iszGibModel;
 };
@@ -84,7 +84,7 @@ bool CGenericMonster::KeyValue(KeyValueData* pkvd)
 //=========================================================
 int CGenericMonster::Classify()
 {
-	return m_iClass ? m_iClass : CLASS_PLAYER_ALLY;
+	return m_iClass != 0 ? m_iClass : CLASS_PLAYER_ALLY;
 }
 
 //=========================================================
@@ -139,7 +139,7 @@ void CGenericMonster::Spawn()
 	//LRC - if the level designer forgets to set a model, don't crash!
 	if (FStringNull(pev->model))
 	{
-		if (pev->targetname)
+		if (!FStringNull(pev->targetname))
 			ALERT(at_error, "No model specified for monster_generic \"%s\"\n", STRING(pev->targetname));
 		else
 			ALERT(at_error, "No model specified for monster_generic at %.2f %.2f %.2f\n", pev->origin.x, pev->origin.y, pev->origin.z);
@@ -148,7 +148,7 @@ void CGenericMonster::Spawn()
 
 	Precache();
 
-	SET_MODEL(ENT(pev), STRING(pev->model));
+	SET_MODEL(ENT(pev), (char*)STRING(pev->model));
 
 	if (vecSize != g_vecZero)
 	{
@@ -162,7 +162,7 @@ void CGenericMonster::Spawn()
 		UTIL_SetSize(pev, vecMin, vecMax);
 	}
 	else if (
-		pev->spawnflags & SF_GENERICMONSTER_PLAYERMODEL ||
+		FBitSet(pev->spawnflags, SF_GENERICMONSTER_PLAYERMODEL) ||
 		FStrEq(STRING(pev->model), "models/player.mdl") ||
 		FStrEq(STRING(pev->model), "models/holo.mdl"))
 		UTIL_SetSize(pev, VEC_HULL_MIN, VEC_HULL_MAX);
@@ -171,21 +171,21 @@ void CGenericMonster::Spawn()
 
 	pev->solid = SOLID_SLIDEBOX;
 	pev->movetype = MOVETYPE_STEP;
-	if (!m_bloodColor)
+	if (m_bloodColor == 0)
 		m_bloodColor = BLOOD_COLOR_RED;
-	if (!pev->health)
+	if (pev->health == 0)
 		pev->health = 8;
 	m_flFieldOfView = 0.5; // indicates the width of this monster's forward view cone ( as a dotproduct result )
 	m_MonsterState = MONSTERSTATE_NONE;
 
 	MonsterInit();
 
-	if ((pev->spawnflags & SF_GENERICMONSTER_NOTSOLID) != 0)
+	if (FBitSet(pev->spawnflags, SF_GENERICMONSTER_NOTSOLID))
 	{
 		pev->solid = SOLID_NOT;
 		pev->takedamage = DAMAGE_NO;
 	}
-	else if (pev->spawnflags & SF_GENERICMONSTER_INVULNERABLE)
+	else if (FBitSet(pev->spawnflags, SF_GENERICMONSTER_INVULNERABLE))
 	{
 		pev->takedamage = DAMAGE_NO;
 	}
@@ -197,7 +197,7 @@ void CGenericMonster::Spawn()
 void CGenericMonster::Precache()
 {
 	PRECACHE_MODEL((char*)STRING(pev->model));
-	if (m_iszGibModel)
+	if (!FStringNull(m_iszGibModel))
 		PRECACHE_MODEL((char*)STRING(m_iszGibModel)); //LRC
 }
 
@@ -221,7 +221,7 @@ public:
 	bool Restore(CRestore& restore) override;
 	static TYPEDESCRIPTION m_SaveData[];
 
-	bool HasCustomGibs() override { return m_iszGibModel; }
+	bool HasCustomGibs() override { return !FStringNull(m_iszGibModel); }
 
 	int m_iszGibModel;
 };
@@ -262,7 +262,7 @@ void CDeadGenericMonster::Spawn()
 	pev->yaw_speed = 8; //LRC -- what?
 	pev->sequence = 0;
 
-	if (pev->netname)
+	if (!FStringNull(pev->netname))
 	{
 		pev->sequence = LookupSequence(STRING(pev->netname));
 
@@ -274,11 +274,6 @@ void CDeadGenericMonster::Spawn()
 	else
 	{
 		pev->sequence = LookupActivity(pev->frags);
-		//		if (pev->sequence == -1)
-		//		{
-		//			ALERT ( at_error, "monster_generic_dead - specify a sequence name or choose a different death type: model \"%s\" has no available death sequences.\n", STRING(pev->model) );
-		//		}
-		//...and if that doesn't work, forget it.
 	}
 
 	// Corpses have less health
@@ -293,6 +288,6 @@ void CDeadGenericMonster::Spawn()
 void CDeadGenericMonster::Precache()
 {
 	PRECACHE_MODEL((char*)STRING(pev->model));
-	if (m_iszGibModel)
+	if (!FStringNull(m_iszGibModel))
 		PRECACHE_MODEL((char*)STRING(m_iszGibModel)); //LRC
 }

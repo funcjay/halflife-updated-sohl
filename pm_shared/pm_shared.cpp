@@ -304,7 +304,7 @@ void PM_PlayGroupSound(const char* szValue, int irand, float fvol)
 {
 	static char szBuf[128];
 	int i;
-	for (i = 0; szValue[i]; i++)
+	for (i = 0; szValue[i] != NULL; i++)
 	{
 		if (szValue[i] == '?')
 		{
@@ -358,7 +358,7 @@ void PM_PlayStepSound(int step, float fvol)
 	{
 	case STEP_LADDER:
 		szValue = pmove->PM_Info_ValueForKey(pmove->physinfo, "lsnd");
-		if (szValue[0] && szValue[1])
+		if (szValue[0] != NULL && szValue[1] != NULL)
 		{
 			PM_PlayGroupSound(szValue, irand, fvol);
 			return;
@@ -366,7 +366,7 @@ void PM_PlayStepSound(int step, float fvol)
 		break;
 	case STEP_SLOSH:
 		szValue = pmove->PM_Info_ValueForKey(pmove->physinfo, "psnd");
-		if (szValue[0] && szValue[1])
+		if (szValue[0] != NULL && szValue[1] != NULL)
 		{
 			PM_PlayGroupSound(szValue, irand, fvol);
 			return;
@@ -374,7 +374,7 @@ void PM_PlayStepSound(int step, float fvol)
 		break;
 	case STEP_WADE:
 		szValue = pmove->PM_Info_ValueForKey(pmove->physinfo, "wsnd");
-		if (szValue[0] && szValue[1])
+		if (szValue[0] != NULL && szValue[1] != NULL)
 		{
 			if (iSkipStep == 0)
 			{
@@ -393,7 +393,7 @@ void PM_PlayStepSound(int step, float fvol)
 		break;
 	default:
 		szValue = pmove->PM_Info_ValueForKey(pmove->physinfo, "ssnd");
-		if (szValue[0] && szValue[1])
+		if (szValue[0] != NULL && szValue[1] != NULL)
 		{
 			PM_PlayGroupSound(szValue, irand, fvol);
 			return;
@@ -401,7 +401,7 @@ void PM_PlayStepSound(int step, float fvol)
 		iType = atoi(pmove->PM_Info_ValueForKey(pmove->physinfo, "stype"));
 		if (iType == -1)
 			step = STEP_CONCRETE;
-		else if (iType)
+		else if (iType != 0)
 			step = iType;
 	}
 

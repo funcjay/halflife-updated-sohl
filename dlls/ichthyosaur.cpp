@@ -51,7 +51,7 @@ class CIchthyosaur : public CFlyingMonster
 public:
 	void Spawn() override;
 	void Precache() override;
-	void SetYawSpeed() override;
+	void SetYawSpeed() override { pev->yaw_speed = 100; }
 	int Classify() override;
 	void HandleAnimEvent(MonsterEvent_t* pEvent) override;
 	CUSTOM_SCHEDULES;
@@ -330,7 +330,7 @@ IMPLEMENT_CUSTOM_SCHEDULES(CIchthyosaur, CFlyingMonster);
 //=========================================================
 int CIchthyosaur::Classify()
 {
-	return m_iClass ? m_iClass : CLASS_ALIEN_MONSTER;
+	return m_iClass != 0 ? m_iClass : CLASS_ALIEN_MONSTER;
 }
 
 
@@ -376,15 +376,6 @@ bool CIchthyosaur::CheckRangeAttack1(float flDot, float flDist)
 	}
 
 	return false;
-}
-
-//=========================================================
-// SetYawSpeed - allows each sequence to have a different
-// turn rate associated with it.
-//=========================================================
-void CIchthyosaur::SetYawSpeed()
-{
-	pev->yaw_speed = 100;
 }
 
 
@@ -473,8 +464,8 @@ void CIchthyosaur::Spawn()
 {
 	Precache();
 
-	if (pev->model)
-		SET_MODEL(ENT(pev), STRING(pev->model)); //LRC
+	if (!FStringNull(pev->model))
+		SET_MODEL(ENT(pev), (char*)STRING(pev->model)); //LRC
 	else
 		SET_MODEL(ENT(pev), "models/icky.mdl");
 	UTIL_SetSize(pev, Vector(-32, -32, -32), Vector(32, 32, 32));
@@ -514,7 +505,7 @@ void CIchthyosaur::Spawn()
 //=========================================================
 void CIchthyosaur::Precache()
 {
-	if (pev->model)
+	if (!FStringNull(pev->model))
 		PRECACHE_MODEL((char*)STRING(pev->model)); //LRC
 	else
 		PRECACHE_MODEL("models/icky.mdl");
@@ -532,7 +523,6 @@ void CIchthyosaur::Precache()
 //=========================================================
 Schedule_t* CIchthyosaur::GetSchedule()
 {
-	// ALERT( at_console, "GetSchedule( )\n" );
 	switch (m_MonsterState)
 	{
 	case MONSTERSTATE_IDLE:
@@ -575,7 +565,6 @@ Schedule_t* CIchthyosaur::GetSchedule()
 //=========================================================
 Schedule_t* CIchthyosaur::GetScheduleOfType(int Type)
 {
-	// ALERT( at_console, "GetScheduleOfType( %d ) %d\n", Type, m_bOnAttack );
 	switch (Type)
 	{
 	case SCHED_IDLE_WALK:
@@ -667,8 +656,6 @@ void CIchthyosaur::RunTask(Task_t* pTask)
 
 			Vector vecPos = vecFrom + vecDelta * m_idealDist + vecSwim * 32;
 
-			// ALERT( at_console, "vecPos %.0f %.0f %.0f\n", vecPos.x, vecPos.y, vecPos.z );
-
 			TraceResult tr;
 
 			UTIL_TraceHull(vecFrom, vecPos, ignore_monsters, large_hull, m_hEnemy->edict(), &tr);
@@ -677,8 +664,6 @@ void CIchthyosaur::RunTask(Task_t* pTask)
 				vecPos = tr.vecEndPos;
 
 			m_SaveVelocity = m_SaveVelocity * 0.8 + 0.2 * (vecPos - pev->origin).Normalize() * m_flightSpeed;
-
-			// ALERT( at_console, "m_SaveVelocity %.2f %.2f %.2f\n", m_SaveVelocity.x, m_SaveVelocity.y, m_SaveVelocity.z );
 
 			if (HasConditions(bits_COND_ENEMY_FACING_ME) && m_hEnemy->FVisible(this))
 			{
@@ -714,7 +699,6 @@ void CIchthyosaur::RunTask(Task_t* pTask)
 					m_flightSpeed += 4;
 				}
 			}
-			// ALERT( at_console, "%.0f\n", m_idealDist );
 		}
 		else
 		{
@@ -723,7 +707,6 @@ void CIchthyosaur::RunTask(Task_t* pTask)
 
 		if (m_flNextAlert < gpGlobals->time)
 		{
-			// ALERT( at_console, "AlertSound()\n");
 			AlertSound();
 			m_flNextAlert = gpGlobals->time + RANDOM_FLOAT(3, 5);
 		}
@@ -755,7 +738,6 @@ void CIchthyosaur::RunTask(Task_t* pTask)
 		{
 			pev->velocity.z -= 8;
 		}
-		// ALERT( at_console, "%f\n", pev->velocity.z );
 		break;
 
 	default:
@@ -974,7 +956,6 @@ void CIchthyosaur::Swim()
 			SetActivity(ACT_WALK);
 		if (m_IdealActivity == ACT_WALK)
 			pev->framerate = m_flightSpeed / 150.0;
-		// ALERT( at_console, "walk %.2f\n", pev->framerate );
 	}
 	else
 	{
@@ -982,20 +963,10 @@ void CIchthyosaur::Swim()
 			SetActivity(ACT_RUN);
 		if (m_IdealActivity == ACT_RUN)
 			pev->framerate = m_flightSpeed / 150.0;
-		// ALERT( at_console, "run  %.2f\n", pev->framerate );
 	}
 
-/*
-	if (!m_pBeam)
-	{
-		m_pBeam = CBeam::BeamCreate( "sprites/laserbeam.spr", 80 );
-		m_pBeam->PointEntInit( pev->origin + m_SaveVelocity, entindex( ) );
-		m_pBeam->SetEndAttachment( 1 );
-		m_pBeam->SetColor( 255, 180, 96 );
-		m_pBeam->SetBrightness( 192 );
-	}
-*/
 #define PROBE_LENGTH 150
+
 	Angles = UTIL_VecToAngles(m_SaveVelocity);
 	Angles.x = -Angles.x;
 	UTIL_MakeVectorsPrivate(Angles, Forward, Right, Up);
@@ -1012,7 +983,6 @@ void CIchthyosaur::Swim()
 
 	Angles = Vector(-pev->angles.x, pev->angles.y, pev->angles.z);
 	UTIL_MakeVectorsPrivate(Angles, Forward, Right, Up);
-	// ALERT( at_console, "%f : %f\n", Angles.x, Forward.z );
 
 	float flDot = DotProduct(Forward, m_SaveVelocity);
 	if (flDot > 0.5)
@@ -1021,18 +991,6 @@ void CIchthyosaur::Swim()
 		pev->velocity = m_SaveVelocity = m_SaveVelocity * m_flightSpeed * (flDot + 0.5);
 	else
 		pev->velocity = m_SaveVelocity = m_SaveVelocity * 80;
-
-	// ALERT( at_console, "%.0f %.0f\n", m_flightSpeed, pev->velocity.Length() );
-
-
-	// ALERT( at_console, "Steer %f %f %f\n", SteeringVector.x, SteeringVector.y, SteeringVector.z );
-
-	/*
-	m_pBeam->SetStartPos( pev->origin + pev->velocity );
-	m_pBeam->RelinkBeam( );
-*/
-
-	// ALERT( at_console, "speed %f\n", m_flightSpeed );
 
 	Angles = UTIL_VecToAngles(m_SaveVelocity);
 
@@ -1049,7 +1007,6 @@ void CIchthyosaur::Swim()
 	// Smooth Yaw and generate Roll
 	//
 	float turn = 360;
-	// ALERT( at_console, "Y %.0f %.0f\n", Angles.y, pev->angles.y );
 
 	if (fabs(Angles.y - pev->angles.y) < fabs(turn))
 	{
@@ -1066,7 +1023,6 @@ void CIchthyosaur::Swim()
 
 	float speed = m_flightSpeed * 0.1;
 
-	// ALERT( at_console, "speed %.0f %f\n", turn, speed );
 	if (fabs(turn) > speed)
 	{
 		if (turn < 0.0)
@@ -1085,8 +1041,6 @@ void CIchthyosaur::Swim()
 	static float yaw_adj;
 
 	yaw_adj = yaw_adj * 0.8 + turn;
-
-	// ALERT( at_console, "yaw %f : %f\n", turn, yaw_adj );
 
 	SetBoneController(0, -yaw_adj / 4.0);
 
@@ -1127,8 +1081,6 @@ void CIchthyosaur::Swim()
 		pev->angles.z = 20;
 
 	UTIL_MakeVectorsPrivate(Vector(-Angles.x, Angles.y, Angles.z), Forward, Right, Up);
-
-	// UTIL_MoveToOrigin ( ENT(pev), pev->origin + Forward * speed, speed, MOVE_STRAFE );
 }
 
 
@@ -1170,5 +1122,5 @@ Vector CIchthyosaur::DoProbe(const Vector& Probe)
 
 		return SteeringVector;
 	}
-	return Vector(0, 0, 0);
+	return g_vecZero;
 }

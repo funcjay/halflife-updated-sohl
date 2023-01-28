@@ -625,9 +625,8 @@ void UTIL_FlushAliases()
 
 	while (g_pWorld->m_pFirstAlias)
 	{
-		if (g_pWorld->m_pFirstAlias->m_iLFlags & LF_ALIASLIST)
+		if (FBitSet(g_pWorld->m_pFirstAlias->m_iLFlags, LF_ALIASLIST))
 		{
-			//			ALERT(at_console, "call FlushChanges for %s \"%s\"\n", STRING(g_pWorld->m_pFirstAlias->pev->classname), STRING(g_pWorld->m_pFirstAlias->pev->targetname));
 			g_pWorld->m_pFirstAlias->FlushChanges();
 			g_pWorld->m_pFirstAlias->m_iLFlags &= ~LF_ALIASLIST;
 		}
@@ -645,7 +644,6 @@ void UTIL_AddToAliasList(CBaseAlias* pAlias)
 
 	pAlias->m_iLFlags |= LF_ALIASLIST;
 
-	//	ALERT(at_console, "Adding %s \"%s\" to alias list\n", STRING(pAlias->pev->classname), STRING(pAlias->pev->targetname));
 	if (g_pWorld->m_pFirstAlias == NULL)
 	{
 		g_pWorld->m_pFirstAlias = pAlias;
@@ -723,7 +721,7 @@ CBaseEntity* UTIL_FollowGroupReference(CBaseEntity* pStartEntity, char* szGroupN
 	int i;
 
 	// find the first '.' in the membername and if there is one, split the string at that point.
-	for (i = 0; szMemberName[i]; i++)
+	for (i = 0; szMemberName[i] != NULL; i++)
 	{
 		if (szMemberName[i] == '.')
 		{
@@ -743,8 +741,6 @@ CBaseEntity* UTIL_FollowGroupReference(CBaseEntity* pStartEntity, char* szGroupN
 		if (FStrEq(STRING(pEntity->pev->classname), "info_group"))
 		{
 			iszMemberValue = ((CInfoGroup*)pEntity)->GetMember(szThisMember);
-			//			ALERT(at_console,"survived getMember\n");
-			//			return NULL;
 			if (!FStringNull(iszMemberValue))
 			{
 				if (szTail) // do we have more references to follow?
@@ -768,7 +764,6 @@ CBaseEntity* UTIL_FollowGroupReference(CBaseEntity* pStartEntity, char* szGroupN
 
 	if (pBestEntity)
 	{
-		//		ALERT(at_console,"\"%s\".\"%s\" returns %s\n",szGroupName,szMemberName,STRING(pBestEntity->pev->targetname));
 		return pBestEntity;
 	}
 	return NULL;
@@ -786,7 +781,7 @@ CBaseEntity* UTIL_FollowReference(CBaseEntity* pStartEntity, const char* szName)
 		return NULL;
 
 	// reference through an info_group?
-	for (i = 0; szName[i]; i++)
+	for (i = 0; szName[i] != NULL; i++)
 	{
 		if (szName[i] == '.')
 		{
@@ -795,10 +790,7 @@ CBaseEntity* UTIL_FollowReference(CBaseEntity* pStartEntity, const char* szName)
 			strncpy(szRoot, szName, i);
 			szRoot[i] = 0;
 			szMember = (char*)&szName[i + 1];
-			//ALERT(at_console,"Following reference- group %s with member %s\n",szRoot,szMember);
 			pResult = UTIL_FollowGroupReference(pStartEntity, szRoot, szMember);
-			//			if (pResult)
-			//				ALERT(at_console,"\"%s\".\"%s\" = %s\n",szRoot,szMember,STRING(pResult->pev->targetname));
 			return pResult;
 		}
 	}
@@ -813,14 +805,10 @@ CBaseEntity* UTIL_FollowReference(CBaseEntity* pStartEntity, const char* szName)
 			else
 				return NULL;
 		}
-		//ALERT(at_console,"Following alias %s\n",szName+1);
 		pResult = UTIL_FollowAliasReference(pStartEntity, szName + 1);
-		//		if (pResult)
-		//			ALERT(at_console,"alias \"%s\" = %s\n",szName+1,STRING(pResult->pev->targetname));
 		return pResult;
 	}
 	// not a reference
-	//	ALERT(at_console,"%s is not a reference\n",szName);
 	return NULL;
 }
 
@@ -1067,11 +1055,6 @@ void UTIL_ScreenFadeAll(const Vector& color, float fadeTime, float fadeHold, int
 	for (i = 1; i <= gpGlobals->maxClients; i++)
 	{
 		CBaseEntity* pPlayer = UTIL_PlayerByIndex(i);
-
-#ifdef XENWARRIOR
-		if (((CBasePlayer*)pPlayer)->FlashlightIsOn())
-			((CBasePlayer*)pPlayer)->FlashlightTurnOff();
-#endif
 
 		UTIL_ScreenFadeWrite(fade, pPlayer);
 	}
@@ -1409,16 +1392,16 @@ Vector UTIL_GetAimVector(edict_t* pent, float flSpeed)
 
 bool UTIL_IsMasterTriggered(string_t iszMaster, CBaseEntity* pActivator)
 {
-	int i, j, found = false;
+	int i, j;
+	bool found = false;
 	const char* szMaster;
 	char szBuf[80];
 	CBaseEntity* pMaster;
-	int reverse = false;
+	bool reverse = false;
 
 
 	if (!FStringNull(iszMaster))
 	{
-		//		ALERT(at_console, "IsMasterTriggered(%s, %s \"%s\")\n", STRING(iszMaster), STRING(pActivator->pev->classname), STRING(pActivator->pev->targetname));
 		szMaster = STRING(iszMaster);
 		if (szMaster[0] == '~') //inverse master
 		{
@@ -1429,11 +1412,11 @@ bool UTIL_IsMasterTriggered(string_t iszMaster, CBaseEntity* pActivator)
 		pMaster = UTIL_FindEntityByTargetname(NULL, szMaster);
 		if (!pMaster)
 		{
-			for (i = 0; szMaster[i]; i++)
+			for (i = 0; szMaster[i] != NULL; i++)
 			{
 				if (szMaster[i] == '(')
 				{
-					for (j = i + 1; szMaster[j]; j++)
+					for (j = i + 1; szMaster[j] != NULL; j++)
 					{
 						if (szMaster[j] == ')')
 						{
@@ -1799,19 +1782,15 @@ void UTIL_StringToRandomVector(float* pVector, const char* pString)
 	{
 		pVector[j] = atof(pfront);
 
-		while (*pstr && *pstr != ' ')
+		while (!FStringNull(*pstr) && *pstr != ' ')
 			pstr++;
-		if (!*pstr)
+		if (FStringNull(*pstr))
 			break;
 		pstr++;
 		pfront = pstr;
 	}
 	if (j < 2)
 	{
-		/*
-		ALERT( at_error, "Bad field in entity!! %s:%s == \"%s\"\n",
-			pkvd->szClassName, pkvd->szKeyName, pkvd->szValue );
-		*/
 		for (j = j + 1; j < 3; j++)
 			pVector[j] = 0;
 	}
@@ -2063,17 +2042,17 @@ char* GetStringForUseType(USE_TYPE useType)
 	switch (useType)
 	{
 	case USE_ON:
-		return "USE_ON";
+		return (char*)"USE_ON";
 	case USE_OFF:
-		return "USE_OFF";
+		return (char*)"USE_OFF";
 	case USE_TOGGLE:
-		return "USE_TOGGLE";
+		return (char*)"USE_TOGGLE";
 	case USE_KILL:
-		return "USE_KILL";
+		return (char*)"USE_KILL";
 	case USE_NOT:
-		return "USE_NOT";
+		return (char*)"USE_NOT";
 	default:
-		return "USE_UNKNOWN!?";
+		return (char*)"USE_UNKNOWN!?";
 	}
 }
 
@@ -2082,17 +2061,17 @@ char* GetStringForState(STATE state)
 	switch (state)
 	{
 	case STATE_ON:
-		return "ON";
+		return (char*)"ON";
 	case STATE_OFF:
-		return "OFF";
+		return (char*)"OFF";
 	case STATE_TURN_ON:
-		return "TURN ON";
+		return (char*)"TURN ON";
 	case STATE_TURN_OFF:
-		return "TURN OFF";
+		return (char*)"TURN OFF";
 	case STATE_IN_USE:
-		return "IN USE";
+		return (char*)"IN USE";
 	default:
-		return "STATE_UNKNOWN!?";
+		return (char*)"STATE_UNKNOWN!?";
 	}
 }
 
@@ -2480,7 +2459,7 @@ void EntvarsKeyvalue(entvars_t* pev, KeyValueData* pkvd)
 
 bool CSave::WriteEntVars(const char* pname, entvars_t* pev)
 {
-	if (pev->targetname)
+	if (!FStringNull(pev->targetname))
 		return WriteFields(STRING(pev->targetname), pname, pev, gEntvarsDescription, ENTVARS_COUNT);
 	else
 		return WriteFields(STRING(pev->classname), pname, pev, gEntvarsDescription, ENTVARS_COUNT);

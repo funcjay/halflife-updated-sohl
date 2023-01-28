@@ -32,13 +32,10 @@ TYPEDESCRIPTION CSquadMonster::m_SaveData[] =
 		DEFINE_FIELD(CSquadMonster, m_hSquadLeader, FIELD_EHANDLE),
 		DEFINE_ARRAY(CSquadMonster, m_hSquadMember, FIELD_EHANDLE, MAX_SQUAD_MEMBERS - 1),
 
-		// DEFINE_FIELD( CSquadMonster, m_afSquadSlots, FIELD_INTEGER ), // these need to be reset after transitions!
 		DEFINE_FIELD(CSquadMonster, m_fEnemyEluded, FIELD_BOOLEAN),
 		DEFINE_FIELD(CSquadMonster, m_flLastEnemySightTime, FIELD_TIME),
 
 		DEFINE_FIELD(CSquadMonster, m_iMySlot, FIELD_INTEGER),
-
-
 };
 
 IMPLEMENT_SAVERESTORE(CSquadMonster, CBaseMonster);
@@ -88,7 +85,6 @@ bool CSquadMonster::OccupySlot(int iDesiredSlots)
 				// No, use this bit
 				pSquadLeader->m_afSquadSlots |= iMask;
 				m_iMySlot = iMask;
-				//				ALERT ( at_aiconsole, "Took slot %d - %d\n", i, m_hSquadLeader->m_afSquadSlots );
 				return true;
 			}
 		}
@@ -104,7 +100,6 @@ void CSquadMonster::VacateSlot()
 {
 	if (m_iMySlot != bits_NO_SLOT && InSquad())
 	{
-		//		ALERT ( at_aiconsole, "Vacated Slot %d - %d\n", m_iMySlot, m_hSquadLeader->m_afSquadSlots );
 		MySquadLeader()->m_afSquadSlots &= ~m_iMySlot;
 		m_iMySlot = bits_NO_SLOT;
 	}
@@ -308,7 +303,6 @@ int CSquadMonster::SquadRecruit(int searchRadius, int maxMembers)
 {
 	int squadCount;
 	int iMyClass = Classify(); // cache this monster's class
-
 
 	// Don't recruit if I'm already in a group
 	if (InSquad())

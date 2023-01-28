@@ -738,7 +738,7 @@ bool CWorld::KeyValue(KeyValueData* pkvd)
 	//LRC- let map designers start the player with his suit already on
 	else if (FStrEq(pkvd->szKeyName, "startsuit"))
 	{
-		g_startSuit = atoi(pkvd->szValue);
+		g_startSuit = atoi(pkvd->szValue) > 0 ? true : false;
 		return true;
 	}
 	else if (FStrEq(pkvd->szKeyName, "allowmonsters"))

@@ -39,7 +39,7 @@ class CInfoAlias : public CBaseAlias
 public:
 	void Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value) override;
 	void Spawn() override;
-	STATE GetState() override { return (pev->spawnflags & SF_ALIAS_OFF) ? STATE_OFF : STATE_ON; }
+	STATE GetState() override { return FBitSet(pev->spawnflags, SF_ALIAS_OFF) ? STATE_OFF : STATE_ON; }
 
 	CBaseEntity* FollowAlias(CBaseEntity* pFrom) override;
 	void ChangeValue(int iszValue) override;
@@ -50,7 +50,7 @@ LINK_ENTITY_TO_CLASS(info_alias, CInfoAlias);
 
 void CInfoAlias::Spawn()
 {
-	if (pev->spawnflags & SF_ALIAS_OFF)
+	if (FBitSet(pev->spawnflags, SF_ALIAS_OFF))
 		pev->message = pev->netname;
 	else
 		pev->message = pev->target;
@@ -58,16 +58,16 @@ void CInfoAlias::Spawn()
 
 void CInfoAlias::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value)
 {
-	if (pev->spawnflags & SF_ALIAS_OFF)
+	if (FBitSet(pev->spawnflags, SF_ALIAS_OFF))
 	{
-		if (pev->spawnflags & SF_ALIAS_DEBUG)
+		if (FBitSet(pev->spawnflags, SF_ALIAS_DEBUG))
 			ALERT(at_debug, "DEBUG: info_alias %s turns on\n", STRING(pev->targetname));
 		pev->spawnflags &= ~SF_ALIAS_OFF;
 		pev->noise = pev->target;
 	}
 	else
 	{
-		if (pev->spawnflags & SF_ALIAS_DEBUG)
+		if (FBitSet(pev->spawnflags, SF_ALIAS_DEBUG))
 			ALERT(at_debug, "DEBUG: info_alias %s turns off\n", STRING(pev->targetname));
 		pev->spawnflags |= SF_ALIAS_OFF;
 		pev->noise = pev->netname;
@@ -89,7 +89,7 @@ void CInfoAlias::ChangeValue(int iszValue)
 void CInfoAlias::FlushChanges()
 {
 	pev->message = pev->noise;
-	if (pev->spawnflags & SF_ALIAS_DEBUG)
+	if (FBitSet(pev->spawnflags, SF_ALIAS_DEBUG))
 		ALERT(at_debug, "DEBUG: info_alias %s now refers to \"%s\"\n", STRING(pev->targetname), STRING(pev->message));
 }
 
@@ -146,11 +146,11 @@ void CInfoGroup::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE use
 
 	if (pTarget && pTarget->IsAlias())
 	{
-		if (pev->spawnflags & SF_GROUP_DEBUG)
+		if (FBitSet(pev->spawnflags, SF_GROUP_DEBUG))
 			ALERT(at_debug, "DEBUG: info_group %s changes the contents of %s \"%s\"\n", STRING(pev->targetname), STRING(pTarget->pev->classname), STRING(pTarget->pev->targetname));
 		((CBaseAlias*)pTarget)->ChangeValue(this);
 	}
-	else if (pev->target)
+	else if (FStringNull(pev->target))
 	{
 		ALERT(at_debug, "info_group \"%s\": alias \"%s\" was not found or not an alias!", STRING(pev->targetname), STRING(pev->target));
 	}
@@ -172,7 +172,7 @@ int CInfoGroup::GetMember(const char* szMemberName)
 		}
 	}
 
-	if (m_iszDefaultMember)
+	if (!FStringNull(m_iszDefaultMember))
 	{
 		static char szBuffer[128];
 		strcpy(szBuffer, STRING(m_iszDefaultMember));
@@ -244,7 +244,7 @@ CBaseEntity* CMultiAlias::FollowAlias(CBaseEntity* pStartEntity)
 	int iTempOffset;
 
 	int i = 0;
-	if (m_iMode)
+	if (m_iMode != 0)
 	{
 		// During any given 'game moment', this code may be called more than once. It must use the
 		// same random values each time (because otherwise it gets really messy). I'm using srand
@@ -334,13 +334,13 @@ void CTriggerChangeAlias::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE
 
 	if (pTarget && pTarget->IsAlias())
 	{
-		CBaseEntity* pValue;
+		CBaseEntity* pValue = NULL;
 
 		if (FStrEq(STRING(pev->netname), "*locus"))
 		{
 			pValue = pActivator;
 		}
-		else if (pev->spawnflags & SF_CHANGEALIAS_RESOLVE)
+		else if (FBitSet(pev->spawnflags, SF_CHANGEALIAS_RESOLVE))
 		{
 			pValue = UTIL_FollowReference(NULL, STRING(pev->netname));
 		}

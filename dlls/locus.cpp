@@ -121,7 +121,6 @@ CBaseEntity* CLocusAlias::FollowAlias(CBaseEntity* pFrom)
 		return NULL;
 	else if (pFrom == NULL || (OFFSET(m_hValue->pev) > OFFSET(pFrom->pev)))
 	{
-		//		ALERT(at_console, "LocusAlias returns %s:  %f %f %f\n", STRING(m_pValue->pev->targetname), m_pValue->pev->origin.x, m_pValue->pev->origin.y, m_pValue->pev->origin.z);
 		return m_hValue;
 	}
 	else
@@ -258,7 +257,7 @@ void CLocusBeam::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE use
 	CBaseEntity* pEndEnt;
 	Vector vecStartPos;
 	Vector vecEndPos;
-	CBeam* pBeam;
+	CBeam* pBeam = NULL;
 
 	switch (pev->impulse)
 	{
@@ -296,24 +295,28 @@ void CLocusBeam::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE use
 		pBeam->PointsInit(vecStartPos, vecStartPos + vecEndPos);
 		break;
 	}
-	pBeam->SetColor(pev->rendercolor.x, pev->rendercolor.y, pev->rendercolor.z);
-	pBeam->SetBrightness(pev->renderamt);
-	pBeam->SetNoise(m_iDistortion);
-	pBeam->SetFrame(m_fFrame);
-	pBeam->SetScrollRate(m_iScrollRate);
-	pBeam->SetFlags(m_iFlags);
-	pBeam->pev->dmg = m_fDamage;
-	pBeam->pev->frags = m_iDamageType;
-	pBeam->pev->spawnflags |= pev->spawnflags & (SF_BEAM_RING |
-													SF_BEAM_SPARKSTART | SF_BEAM_SPARKEND | SF_BEAM_DECALS);
-	if (m_fDuration)
-	{
-		pBeam->SetThink(&CBeam::SUB_Remove);
-		pBeam->SetNextThink(m_fDuration);
-	}
-	pBeam->pev->targetname = m_iszTargetName;
 
-	if (pev->target)
+	if (pBeam)
+	{
+		pBeam->SetColor(pev->rendercolor.x, pev->rendercolor.y, pev->rendercolor.z);
+		pBeam->SetBrightness(pev->renderamt);
+		pBeam->SetNoise(m_iDistortion);
+		pBeam->SetFrame(m_fFrame);
+		pBeam->SetScrollRate(m_iScrollRate);
+		pBeam->SetFlags(m_iFlags);
+		pBeam->pev->dmg = m_fDamage;
+		pBeam->pev->frags = m_iDamageType;
+		pBeam->pev->spawnflags |= pev->spawnflags & (SF_BEAM_RING |
+														SF_BEAM_SPARKSTART | SF_BEAM_SPARKEND | SF_BEAM_DECALS);
+		if (m_fDuration != 0)
+		{
+			pBeam->SetThink(&CBeam::SUB_Remove);
+			pBeam->SetNextThink(m_fDuration);
+		}
+		pBeam->pev->targetname = m_iszTargetName;
+	}
+
+	if (!FStringNull(pev->target))
 	{
 		FireTargets(STRING(pev->target), pBeam, this, USE_TOGGLE, 0);
 	}
@@ -323,13 +326,13 @@ void CLocusBeam::Spawn()
 {
 	Precache();
 	m_iFlags = 0;
-	if (pev->spawnflags & SF_LBEAM_SHADEIN)
+	if (FBitSet(pev->spawnflags, SF_LBEAM_SHADEIN))
 		m_iFlags |= BEAM_FSHADEIN;
-	if (pev->spawnflags & SF_LBEAM_SHADEOUT)
+	if (FBitSet(pev->spawnflags, SF_LBEAM_SHADEOUT))
 		m_iFlags |= BEAM_FSHADEOUT;
-	if (pev->spawnflags & SF_LBEAM_SINE)
+	if (FBitSet(pev->spawnflags, SF_LBEAM_SINE))
 		m_iFlags |= BEAM_FSINE;
-	if (pev->spawnflags & SF_LBEAM_SOLID)
+	if (FBitSet(pev->spawnflags, SF_LBEAM_SOLID))
 		m_iFlags |= BEAM_FSOLID;
 }
 
@@ -360,9 +363,7 @@ Vector CCalcPosition::CalcPosition(CBaseEntity* pLocus)
 	{
 	case 1: //eyes
 		vecResult = vecOffset + pSubject->EyePosition();
-		//ALERT(at_console, "calc_subpos returns %f %f %f\n", vecResult.x, vecResult.y, vecResult.z);
 		return vecResult;
-		//return vecOffset + pLocus->EyePosition();
 	case 2: // top
 		return vecOffset + pSubject->pev->origin + Vector((pSubject->pev->mins.x + pSubject->pev->maxs.x) / 2, (pSubject->pev->mins.y + pSubject->pev->maxs.y) / 2, pSubject->pev->maxs.z);
 	case 3: // centre
@@ -522,7 +523,7 @@ Vector CCalcSubVelocity::CalcVelocity(CBaseEntity* pLocus)
 
 Vector CCalcSubVelocity::Convert(CBaseEntity* pLocus, Vector vecDir)
 {
-	if (pev->spawnflags & SF_CALCVELOCITY_NORMALIZE)
+	if (FBitSet(pev->spawnflags, SF_CALCVELOCITY_NORMALIZE))
 		vecDir = vecDir.Normalize();
 
 	float fRatio = CalcLocus_Ratio(pLocus, STRING(pev->noise));
@@ -530,9 +531,8 @@ Vector CCalcSubVelocity::Convert(CBaseEntity* pLocus, Vector vecDir)
 
 	Vector vecResult = vecOffset + (vecDir * fRatio);
 
-	if (pev->spawnflags & SF_CALCVELOCITY_SWAPZ)
+	if (FBitSet(pev->spawnflags, SF_CALCVELOCITY_SWAPZ))
 		vecResult.z = -vecResult.z;
-	//	ALERT(at_console, "calc_subvel returns (%f %f %f) = (%f %f %f) + ((%f %f %f) * %f)\n", vecResult.x, vecResult.y, vecResult.z, vecOffset.x, vecOffset.y, vecOffset.z, vecDir.x, vecDir.y, vecDir.z, fRatio);
 	return vecResult;
 }
 
@@ -556,7 +556,6 @@ LINK_ENTITY_TO_CLASS(calc_velocity_path, CCalcVelocityPath);
 Vector CCalcVelocityPath::CalcVelocity(CBaseEntity* pLocus)
 {
 	Vector vecStart = CalcLocus_Position(this, pLocus, STRING(pev->target));
-	//	ALERT(at_console, "vecStart %f %f %f\n", vecStart.x, vecStart.y, vecStart.z);
 	Vector vecOffs;
 	float fFactor = CalcLocus_Ratio(pLocus, STRING(pev->noise));
 
@@ -569,9 +568,8 @@ Vector CCalcVelocityPath::CalcVelocity(CBaseEntity* pLocus)
 		vecOffs = CalcLocus_Velocity(this, pLocus, STRING(pev->netname));
 		break;
 	}
-	//	ALERT(at_console, "vecOffs %f %f %f\n", vecOffs.x, vecOffs.y, vecOffs.z);
 
-	if (pev->health)
+	if (pev->health != 0)
 	{
 		float len = vecOffs.Length();
 		switch ((int)pev->health)
@@ -593,7 +591,7 @@ Vector CCalcVelocityPath::CalcVelocity(CBaseEntity* pLocus)
 
 	vecOffs = vecOffs * fFactor;
 
-	if (pev->frags)
+	if (pev->frags != 0)
 	{
 		TraceResult tr;
 		IGNORE_GLASS iIgnoreGlass = ignore_glass;
@@ -616,7 +614,6 @@ Vector CCalcVelocityPath::CalcVelocity(CBaseEntity* pLocus)
 		vecOffs = tr.vecEndPos - vecStart;
 	}
 
-	//	ALERT(at_console, "path: %f %f %f\n", vecOffs.x, vecOffs.y, vecOffs.z);
 	return vecOffs;
 }
 
@@ -638,7 +635,7 @@ Vector CCalcVelocityPolar::CalcVelocity(CBaseEntity* pLocus)
 
 	float fFactor = CalcLocus_Ratio(pLocus, STRING(pev->noise));
 
-	if (!(pev->spawnflags & SF_CALCVELOCITY_NORMALIZE))
+	if (!FBitSet(pev->spawnflags, SF_CALCVELOCITY_NORMALIZE))
 		fFactor = fFactor * vecBasis.Length();
 
 	UTIL_MakeVectors(vecAngles);
@@ -736,14 +733,14 @@ void CLocusVariable::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE
 	Vector vecPos = g_vecZero;
 	Vector vecDir = g_vecZero;
 	float fRatio = 0;
-	if (m_iszPosition)
+	if (!FStringNull(m_iszPosition))
 		vecPos = CalcLocus_Position(this, pActivator, STRING(m_iszPosition));
-	if (m_iszVelocity)
+	if (!FStringNull(m_iszVelocity))
 		vecDir = CalcLocus_Velocity(this, pActivator, STRING(m_iszVelocity));
-	if (m_iszRatio)
+	if (!FStringNull(m_iszRatio))
 		fRatio = CalcLocus_Ratio(pActivator, STRING(m_iszRatio));
 
-	if (m_iszTargetName)
+	if (!FStringNull(m_iszTargetName))
 	{
 		CMark* pMark = GetClassPtr((CMark*)NULL);
 		pMark->pev->classname = MAKE_STRING("mark");

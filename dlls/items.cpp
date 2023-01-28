@@ -209,20 +209,20 @@ class CItemBattery : public CItem
 	void Spawn() override
 	{
 		Precache();
-		if (pev->model)
-			SET_MODEL(ENT(pev), STRING(pev->model)); //LRC
+		if (!FStringNull(pev->model))
+			SET_MODEL(ENT(pev), (char*)STRING(pev->model)); //LRC
 		else
 			SET_MODEL(ENT(pev), "models/w_battery.mdl");
 		CItem::Spawn();
 	}
 	void Precache() override
 	{
-		if (pev->model)
+		if (!FStringNull(pev->model))
 			PRECACHE_MODEL((char*)STRING(pev->model)); //LRC
 		else
 			PRECACHE_MODEL("models/w_battery.mdl");
 
-		if (pev->noise)
+		if (!FStringNull(pev->noise))
 			PRECACHE_SOUND((char*)STRING(pev->noise)); //LRC
 		else
 			PRECACHE_SOUND("items/gunpickup2.wav");
@@ -235,13 +235,13 @@ class CItemBattery : public CItem
 			int pct;
 			char szcharge[64];
 
-			if (pev->armorvalue)
+			if (pev->armorvalue != 0)
 				pPlayer->pev->armorvalue += pev->armorvalue;
 			else
 				pPlayer->pev->armorvalue += gSkillData.batteryCapacity;
 			pPlayer->pev->armorvalue = V_min(pPlayer->pev->armorvalue, MAX_NORMAL_BATTERY);
 
-			if (pev->noise)
+			if (!FStringNull(pev->noise))
 				EMIT_SOUND(pPlayer->edict(), CHAN_ITEM, STRING(pev->noise), 1, ATTN_NORM); //LRC
 			else
 				EMIT_SOUND(pPlayer->edict(), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM);
@@ -260,7 +260,6 @@ class CItemBattery : public CItem
 
 			sprintf(szcharge, "!HEV_%1dP", pct);
 
-			//EMIT_SOUND_SUIT(ENT(pev), szcharge);
 			pPlayer->SetSuitUpdate(szcharge, false, SUIT_NEXT_IN_30SEC);
 			return true;
 		}

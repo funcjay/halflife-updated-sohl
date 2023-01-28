@@ -112,7 +112,7 @@ const char* CZombie::pPainSounds[] =
 //=========================================================
 int CZombie::Classify()
 {
-	return m_iClass ? m_iClass : CLASS_ALIEN_MONSTER;
+	return m_iClass != 0 ? m_iClass : CLASS_ALIEN_MONSTER;
 }
 
 bool CZombie::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType)
@@ -176,7 +176,6 @@ void CZombie::HandleAnimEvent(MonsterEvent_t* pEvent)
 	case ZOMBIE_AE_ATTACK_RIGHT:
 	{
 		// do stuff for this event.
-		//		ALERT( at_console, "Slash right!\n" );
 		CBaseEntity* pHurt = CheckTraceHullAttack(70, gSkillData.zombieDmgOneSlash, DMG_SLASH);
 		if (pHurt)
 		{
@@ -200,7 +199,6 @@ void CZombie::HandleAnimEvent(MonsterEvent_t* pEvent)
 	case ZOMBIE_AE_ATTACK_LEFT:
 	{
 		// do stuff for this event.
-		//		ALERT( at_console, "Slash left!\n" );
 		CBaseEntity* pHurt = CheckTraceHullAttack(70, gSkillData.zombieDmgOneSlash, DMG_SLASH);
 		if (pHurt)
 		{
@@ -254,8 +252,8 @@ void CZombie::Spawn()
 {
 	Precache();
 
-	if (pev->model)
-		SET_MODEL(ENT(pev), STRING(pev->model)); //LRC
+	if (!FStringNull(pev->model))
+		SET_MODEL(ENT(pev), (char*)STRING(pev->model)); //LRC
 	else
 		SET_MODEL(ENT(pev), "models/zombie.mdl");
 	UTIL_SetSize(pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
@@ -278,7 +276,7 @@ void CZombie::Spawn()
 //=========================================================
 void CZombie::Precache()
 {
-	if (pev->model)
+	if (!FStringNull(pev->model))
 		PRECACHE_MODEL((char*)STRING(pev->model)); //LRC
 	else
 		PRECACHE_MODEL("models/zombie.mdl");
@@ -294,9 +292,6 @@ void CZombie::Precache()
 //=========================================================
 // AI Schedules Specific to this monster
 //=========================================================
-
-
-
 int CZombie::IgnoreConditions()
 {
 	int iIgnore = CBaseMonster::IgnoreConditions();

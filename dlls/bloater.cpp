@@ -57,7 +57,7 @@ LINK_ENTITY_TO_CLASS(monster_bloater, CBloater);
 //=========================================================
 int CBloater::Classify()
 {
-	return m_iClass ? m_iClass : CLASS_ALIEN_MONSTER;
+	return m_iClass != 0 ? m_iClass : CLASS_ALIEN_MONSTER;
 }
 
 bool CBloater::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType)
@@ -111,8 +111,8 @@ void CBloater::Spawn()
 {
 	Precache();
 
-	if (pev->model)
-		SET_MODEL(ENT(pev), STRING(pev->model)); //LRC
+	if (!FStringNull(pev->model))
+		SET_MODEL(ENT(pev), (char*)STRING(pev->model)); //LRC
 	else
 		SET_MODEL(ENT(pev), "models/floater.mdl");
 	UTIL_SetSize(pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
@@ -134,12 +134,8 @@ void CBloater::Spawn()
 //=========================================================
 void CBloater::Precache()
 {
-	if (pev->model)
+	if (!FStringNull(pev->model))
 		PRECACHE_MODEL((char*)STRING(pev->model)); //LRC
 	else
 		PRECACHE_MODEL("models/floater.mdl");
 }
-
-//=========================================================
-// AI Schedules Specific to this monster
-//=========================================================

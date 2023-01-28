@@ -63,12 +63,6 @@ extern edict_t* EntSelectSpawnPoint(CBaseEntity* pPlayer);
 #define FLASH_DRAIN_TIME 1.2  //100 units/3 minutes
 #define FLASH_CHARGE_TIME 0.2 // 100 units/20 seconds  (seconds per unit)
 
-#ifdef XENWARRIOR
-float g_fEnvFadeTime = 0; // flashlight can't be used until this time expires.
-						  // this is just a big hack, doesn't work with saverestore, etc...
-						  // Doing it properly would just be effort.
-#endif
-
 // Global Savedata for player
 TYPEDESCRIPTION CBasePlayer::m_playerSaveData[] =
 	{
@@ -122,39 +116,6 @@ TYPEDESCRIPTION CBasePlayer::m_playerSaveData[] =
 		DEFINE_FIELD(CBasePlayer, m_iFOV, FIELD_INTEGER),
 
 		DEFINE_FIELD(CBasePlayer, m_SndRoomtype, FIELD_INTEGER),
-		// Don't save these. Let the game recalculate the closest env_sound, and continue to use the last room type like it always has.
-		//DEFINE_FIELD(CBasePlayer, m_SndLast, FIELD_EHANDLE),
-		//DEFINE_FIELD(CBasePlayer, m_flSndRange, FIELD_FLOAT),
-
-		//LRC
-		//	DEFINE_FIELD( CBasePlayer, m_iFogStartDist, FIELD_INTEGER ),
-		//	DEFINE_FIELD( CBasePlayer, m_iFogEndDist, FIELD_INTEGER ),
-		//	DEFINE_FIELD( CBasePlayer, m_vecFogColor, FIELD_VECTOR ),
-
-		//DEFINE_FIELD( CBasePlayer, m_fDeadTime, FIELD_FLOAT ), // only used in multiplayer games
-		//DEFINE_FIELD( CBasePlayer, m_fGameHUDInitialized, FIELD_INTEGER ), // only used in multiplayer games
-		//DEFINE_FIELD( CBasePlayer, m_flStopExtraSoundTime, FIELD_TIME ),
-		//DEFINE_FIELD( CBasePlayer, m_fKnownItem, FIELD_BOOLEAN ), // reset to zero on load
-		//DEFINE_FIELD( CBasePlayer, m_iPlayerSound, FIELD_INTEGER ),	// Don't restore, set in Precache()
-		//DEFINE_FIELD( CBasePlayer, m_fNewAmmo, FIELD_INTEGER ), // Don't restore, client needs reset
-		//DEFINE_FIELD( CBasePlayer, m_flgeigerRange, FIELD_FLOAT ),	// Don't restore, reset in Precache()
-		//DEFINE_FIELD( CBasePlayer, m_flgeigerDelay, FIELD_FLOAT ),	// Don't restore, reset in Precache()
-		//DEFINE_FIELD( CBasePlayer, m_igeigerRangePrev, FIELD_FLOAT ),	// Don't restore, reset in Precache()
-		//DEFINE_FIELD( CBasePlayer, m_iStepLeft, FIELD_INTEGER ), // Don't need to restore
-		//DEFINE_ARRAY( CBasePlayer, m_szTextureName, FIELD_CHARACTER, CBTEXTURENAMEMAX ), // Don't need to restore
-		//DEFINE_FIELD( CBasePlayer, m_chTextureType, FIELD_CHARACTER ), // Don't need to restore
-		//DEFINE_FIELD( CBasePlayer, m_fNoPlayerSound, FIELD_BOOLEAN ), // Don't need to restore, debug
-		//DEFINE_FIELD( CBasePlayer, m_iUpdateTime, FIELD_INTEGER ), // Don't need to restore
-		//DEFINE_FIELD( CBasePlayer, m_iClientHealth, FIELD_INTEGER ), // Don't restore, client needs reset
-		//DEFINE_FIELD( CBasePlayer, m_iClientBattery, FIELD_INTEGER ), // Don't restore, client needs reset
-		//DEFINE_FIELD( CBasePlayer, m_iClientHideHUD, FIELD_INTEGER ), // Don't restore, client needs reset
-		//DEFINE_FIELD( CBasePlayer, m_fWeapon, FIELD_BOOLEAN ),  // Don't restore, client needs reset
-		//DEFINE_FIELD( CBasePlayer, m_nCustomSprayFrames, FIELD_INTEGER ), // Don't restore, depends on server message after spawning and only matters in multiplayer
-		//DEFINE_FIELD( CBasePlayer, m_vecAutoAim, FIELD_VECTOR ), // Don't save/restore - this is recomputed
-		//DEFINE_ARRAY( CBasePlayer, m_rgAmmoLast, FIELD_INTEGER, MAX_AMMO_SLOTS ), // Don't need to restore
-		//DEFINE_FIELD( CBasePlayer, m_fOnTarget, FIELD_BOOLEAN ), // Don't need to restore
-		//DEFINE_FIELD( CBasePlayer, m_nCustomSprayFrames, FIELD_INTEGER ), // Don't need to restore
-
 };
 
 LINK_ENTITY_TO_CLASS(player, CBasePlayer);
@@ -258,13 +219,7 @@ bool CBasePlayer::TakeHealth(float flHealth, int bitsDamageType)
 
 Vector CBasePlayer::GetGunPosition()
 {
-	//	UTIL_MakeVectors(pev->v_angle);
-	//	m_HackedGunPos = pev->view_ofs;
-	Vector origin;
-
-	origin = pev->origin + pev->view_ofs;
-
-	return origin;
+	return pev->origin + pev->view_ofs;
 }
 
 //=========================================================
@@ -730,8 +685,6 @@ void CBasePlayer::RemoveAllItems(bool removeSuit)
 //LRC
 void CBasePlayer::RemoveAmmo(const char* szName, int iAmount)
 {
-	//	ALERT(at_console, "RemoveAmmo(\"%s\", %d): \n", szName, iAmount);
-
 	if (iAmount == -3 || iAmount == -1)
 	{
 		return;
@@ -745,14 +698,10 @@ void CBasePlayer::RemoveAmmo(const char* szName, int iAmount)
 		if (m_rgAmmo[x] < 0)
 		{
 			m_rgAmmo[x] = 0;
-			//			ALERT(at_console, "Reduce to 0\n");
 		}
-		//		else
-		//			ALERT(at_console, "Reduce\n");
 	}
 	else
 	{
-		//		ALERT(at_console, "All\n");
 		m_rgAmmo[x] = 0;
 	}
 }
@@ -764,7 +713,7 @@ void CBasePlayer::RemoveItems(uint64_t iWeaponMask, int i9mm, int i357, int iBuc
 	CBasePlayerItem* pCurrentItem;
 
 	// hornetgun is outside the spawnflags Worldcraft can set - handle it seperately.
-	if (iHornet)
+	if (iHornet != 0)
 		iWeaponMask |= 1ULL << WEAPON_HORNETGUN;
 
 	RemoveAmmo("9mm", i9mm);
@@ -787,11 +736,9 @@ void CBasePlayer::RemoveItems(uint64_t iWeaponMask, int i9mm, int i357, int iBuc
 		pCurrentItem = m_rgpPlayerItems[i];
 		while (pCurrentItem->m_pNext)
 		{
-			if (!(1ULL << pCurrentItem->m_pNext->m_iId & iWeaponMask))
+			if (!FBitSet(1ULL << pCurrentItem->m_pNext->m_iId, iWeaponMask))
 			{
 				((CBasePlayerWeapon*)pCurrentItem)->DrainClip(this, false, i9mm, i357, iBuck, iBolt, iARGren, iRock, iUranium, iSatchel, iSnark, iTrip, iGren);
-				//remove pCurrentItem->m_pNext from the list
-				//				ALERT(at_console, "Removing %s. (id = %d)\n", pCurrentItem->m_pNext->pszName(), pCurrentItem->m_pNext->m_iId);
 				pCurrentItem->m_pNext->Drop();
 				if (m_pLastItem == pCurrentItem->m_pNext)
 					m_pLastItem = NULL;
@@ -802,15 +749,13 @@ void CBasePlayer::RemoveItems(uint64_t iWeaponMask, int i9mm, int i357, int iBuc
 				//we're keeping this, so we need to empty the clip
 				((CBasePlayerWeapon*)pCurrentItem)->DrainClip(this, true, i9mm, i357, iBuck, iBolt, iARGren, iRock, iUranium, iSatchel, iSnark, iTrip, iGren);
 				//now, leave pCurrentItem->m_pNext in the list and go on to the next
-				//				ALERT(at_console, "Keeping %s. (id = %d)\n", pCurrentItem->m_pNext->pszName(), pCurrentItem->m_pNext->m_iId);
 				pCurrentItem = pCurrentItem->m_pNext;
 			}
 		}
 		// we've gone through items 2+, now we finish off by checking item 1.
-		if (!(1ULL << m_rgpPlayerItems[i]->m_iId & iWeaponMask))
+		if (!FBitSet(1ULL << m_rgpPlayerItems[i]->m_iId, iWeaponMask))
 		{
 			((CBasePlayerWeapon*)pCurrentItem)->DrainClip(this, false, i9mm, i357, iBuck, iBolt, iARGren, iRock, iUranium, iSatchel, iSnark, iTrip, iGren);
-			//			ALERT(at_console, "Removing %s. (id = %d)\n", m_rgpPlayerItems[i]->pszName(), m_rgpPlayerItems[i]->m_iId);
 			m_rgpPlayerItems[i]->Drop();
 			if (m_pLastItem == m_rgpPlayerItems[i])
 				m_pLastItem = NULL;
@@ -819,20 +764,17 @@ void CBasePlayer::RemoveItems(uint64_t iWeaponMask, int i9mm, int i357, int iBuc
 		else
 		{
 			((CBasePlayerWeapon*)pCurrentItem)->DrainClip(this, true, i9mm, i357, iBuck, iBolt, iARGren, iRock, iUranium, iSatchel, iSnark, iTrip, iGren);
-			//			ALERT(at_console, "Keeping %s. (id = %d)\n", m_rgpPlayerItems[i]->pszName(), m_rgpPlayerItems[i]->m_iId);
 		}
 	}
 	
-	int suit = HasSuit();
+	bool suit = HasSuit();
 	SetHasSuit(false);
-	//	ALERT(at_console, "weapons was %d; ", pev->weapons);
 	m_WeaponBits &= iWeaponMask;
-	//	ALERT(at_console, "now %d\n(Mask is %d)", pev->weapons, iWeaponMask);
-	if (suit && !(iWeaponMask & 1))
+	if (suit && !FBitSet(iWeaponMask, 1))
 		SetHasSuit(true);
 
 	// are we dropping the active item?
-	if (m_pActiveItem && !(1ULL << m_pActiveItem->m_iId & iWeaponMask))
+	if (m_pActiveItem && !FBitSet(1ULL << m_pActiveItem->m_iId, iWeaponMask))
 	{
 		ResetAutoaim();
 		m_pActiveItem->Holster();
@@ -1573,14 +1515,13 @@ void CBasePlayer::PlayerUse()
 		while ((pObject = UTIL_FindEntityInSphere(pObject, pev->origin, PLAYER_SEARCH_RADIUS)) != NULL)
 		{
 			caps = pObject->ObjectCaps();
-			if (caps & (FCAP_IMPULSE_USE | FCAP_CONTINUOUS_USE | FCAP_ONOFF_USE) && !(caps & FCAP_ONLYDIRECT_USE)) //LRC - we can't see 'direct use' entities in this section
+			if (FBitSet(caps, FCAP_IMPULSE_USE | FCAP_CONTINUOUS_USE | FCAP_ONOFF_USE) && !FBitSet(caps, FCAP_ONLYDIRECT_USE)) //LRC - we can't see 'direct use' entities in this section
 			{
 				// !!!PERFORMANCE- should this check be done on a per case basis AFTER we've determined that
 				// this object is actually usable? This dot is being done for every object within PLAYER_SEARCH_RADIUS
 				// when player hits the use key. How many objects can be in that area, anyway? (sjb)
 				vecLOS = (VecBModelOrigin(pObject->pev) - (pev->origin + pev->view_ofs));
 
-				//				ALERT(at_console, "absmin %f %f %f, absmax %f %f %f, mins %f %f %f, maxs %f %f %f, size %f %f %f\n", pObject->pev->absmin.x, pObject->pev->absmin.y, pObject->pev->absmin.z, pObject->pev->absmax.x, pObject->pev->absmax.y, pObject->pev->absmax.z, pObject->pev->mins.x, pObject->pev->mins.y, pObject->pev->mins.z, pObject->pev->maxs.x, pObject->pev->maxs.y, pObject->pev->maxs.z, pObject->pev->size.x, pObject->pev->size.y, pObject->pev->size.z);//LRCTEMP
 				// This essentially moves the origin of the target to the corner nearest the player to test to see
 				// if it's "hull" is in the view cone
 				vecLOS = UTIL_ClampVectorToBox(vecLOS, pObject->pev->size * 0.5);
@@ -1590,9 +1531,7 @@ void CBasePlayer::PlayerUse()
 				{											 // only if the item is in front of the user
 					pClosest = pObject;
 					flMaxDot = flDot;
-					//				ALERT( at_console, "%s : %f\n", STRING( pObject->pev->classname ), flDot );
 				}
-				//			ALERT( at_console, "%s : %f\n", STRING( pObject->pev->classname ), flDot );
 			}
 		}
 		pObject = pClosest;
@@ -2629,11 +2568,6 @@ void CBasePlayer::PostThink()
 	if (!IsAlive())
 		goto pt_end;
 
-#ifdef XENWARRIOR
-	if (FlashlightIsOn())
-		UTIL_ScreenFade(this, Vector(150, 20, 150), 0, 0, 100, FFADE_STAYOUT);
-#endif
-
 	// Handle Tank controlling
 	if (m_pTank != NULL)
 	{ // if they've moved too far from the gun,  or selected a weapon, unuse the gun
@@ -3040,15 +2974,6 @@ void CBasePlayer::Precache()
 
 	if (gInitHUD)
 		m_fInitHUD = true;
-
-#ifdef XENWARRIOR
-	g_fEnvFadeTime = 0;
-	if (FlashlightIsOn())
-		m_iLFlags |= LF_FLASH_RESUME;
-
-	if (CVAR_GET_FLOAT("v_dark"))
-		g_fEnvFadeTime = gpGlobals->time + 10;
-#endif
 }
 
 
@@ -3430,11 +3355,7 @@ void CBasePlayer::GiveNamedItem(const char* szName, int defaultAmmo)
 
 bool CBasePlayer::FlashlightIsOn()
 {
-#ifdef XENWARRIOR
-	return FBitSet(pev->effects, EF_BRIGHTLIGHT);
-#else
 	return FBitSet(pev->effects, EF_DIMLIGHT);
-#endif
 }
 
 
@@ -3445,27 +3366,15 @@ void CBasePlayer::FlashlightTurnOn()
 		return;
 	}
 
-#ifdef XENWARRIOR
-	if (g_fEnvFadeTime > gpGlobals->time)
-	{
-		return;
-	}
-#endif
-
 	if (HasSuit())
 	{
 		EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, SOUND_FLASHLIGHT_ON, 1.0, ATTN_NORM, 0, PITCH_NORM);
 
-#ifdef XENWARRIOR
-		SetBits(pev->effects, EF_BRIGHTLIGHT);
-		pev->fov = m_iFOV = 90;
-#else
 		SetBits(pev->effects, EF_DIMLIGHT);
 		MESSAGE_BEGIN(MSG_ONE, gmsgFlashlight, NULL, pev);
 		WRITE_BYTE(1);
 		WRITE_BYTE(m_iFlashBattery);
 		MESSAGE_END();
-#endif
 
 		m_flFlashLightTime = FLASH_DRAIN_TIME + gpGlobals->time;
 	}
@@ -3476,17 +3385,12 @@ void CBasePlayer::FlashlightTurnOff()
 {
 	if (FlashlightIsOn())
 		EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, SOUND_FLASHLIGHT_OFF, 1.0, ATTN_NORM, 0, PITCH_NORM);
-#ifdef XENWARRIOR
-	ClearBits(pev->effects, EF_BRIGHTLIGHT);
-	UTIL_ScreenFade(this, Vector(150, 50, 50), 0, 0, 100, FFADE_IN);
-	pev->fov = m_iFOV = 0;
-#else
+
 	ClearBits(pev->effects, EF_DIMLIGHT);
 	MESSAGE_BEGIN(MSG_ONE, gmsgFlashlight, NULL, pev);
 	WRITE_BYTE(0);
 	WRITE_BYTE(m_iFlashBattery);
 	MESSAGE_END();
-#endif
 
 	m_flFlashLightTime = FLASH_CHARGE_TIME + gpGlobals->time;
 }
@@ -5237,17 +5141,17 @@ class CPlayerFreeze : public CBaseDelay
 
 void CPlayerFreeze::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value)
 {
-	if (!(pev->spawnflags & SF_FREEZE_LOCUS))
+	if (!FBitSet(pev->spawnflags, SF_FREEZE_LOCUS))
 	{
 		pActivator = UTIL_FindEntityByClassname(NULL, "player");
 	}
 
-	if (pActivator && pActivator->pev->flags & FL_CLIENT)
+	if (pActivator && FBitSet(pActivator->pev->flags, FL_CLIENT))
 	{
-		if (!ShouldToggle(useType, pActivator->pev->flags & FL_FROZEN))
+		if (!ShouldToggle(useType, FBitSet(pActivator->pev->flags, FL_FROZEN)))
 			return;
 
-		if (pActivator->pev->flags & FL_FROZEN)
+		if (FBitSet(pActivator->pev->flags, FL_FROZEN))
 		{
 			// unfreeze him
 			((CBasePlayer*)((CBaseEntity*)pActivator))->EnableControl(true);
@@ -5258,7 +5162,7 @@ void CPlayerFreeze::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE 
 		{
 			// freeze him
 			((CBasePlayer*)((CBaseEntity*)pActivator))->EnableControl(false);
-			if (m_flDelay)
+			if (m_flDelay != 0)
 			{
 				m_hActivator = pActivator;
 				SetNextThink(m_flDelay);
@@ -5320,7 +5224,7 @@ class CHudSprite : public CBaseEntity
 {
 	void Spawn() override;
 	void Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value) override;
-	STATE GetState() override { return pev->spawnflags & SF_HUDSPR_ACTIVE ? STATE_ON : STATE_OFF; }
+	STATE GetState() override { return FBitSet(pev->spawnflags, SF_HUDSPR_ACTIVE) ? STATE_ON : STATE_OFF; }
 	void Think() override;
 };
 
@@ -5331,7 +5235,7 @@ void CHudSprite::Spawn()
 		pev->spawnflags |= SF_HUDSPR_ACTIVE;
 	}
 
-	if (pev->spawnflags & SF_HUDSPR_ACTIVE)
+	if (FBitSet(pev->spawnflags, SF_HUDSPR_ACTIVE))
 	{
 		SetNextThink(2);
 	}
@@ -5351,7 +5255,7 @@ void CHudSprite::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE use
 
 	if (ShouldToggle(useType))
 	{
-		if (pev->spawnflags & SF_HUDSPR_ACTIVE)
+		if (FBitSet(pev->spawnflags, SF_HUDSPR_ACTIVE))
 			pev->spawnflags &= ~SF_HUDSPR_ACTIVE;
 		else
 			pev->spawnflags |= SF_HUDSPR_ACTIVE;

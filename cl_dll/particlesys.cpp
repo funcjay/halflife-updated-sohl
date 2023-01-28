@@ -126,7 +126,7 @@ RandomRange::RandomRange(char* szToken)
 	char* cOneDot = NULL;
 	m_bDefined = true;
 
-	for (char* c = szToken; *c; c++)
+	for (char* c = szToken; *c != NULL; c++)
 	{
 		if (*c == '.')
 		{
@@ -235,7 +235,7 @@ void ParticleSystem::AllocateParticles(int iParticles)
 	pLast->nextpart = NULL;
 }
 
-ParticleSystem::~ParticleSystem(void)
+ParticleSystem::~ParticleSystem()
 {
 	delete[] m_pAllParticles;
 
@@ -515,23 +515,6 @@ ParticleType* ParticleSystem::ParseType(char*& szFile)
 				pType->m_iDrawCond = CONTENT_SPECIAL3;
 			}
 		}
-		/*		else if ( !stricmp( szToken, "collision" ) )
-		{
-			szFile = gEngfuncs.COM_ParseFile(szFile,szToken);
-			if ( !stricmp( szToken, "none" ) )
-			{
-				pType->m_iCollision = COLLISION_NONE;
-			}
-			else if ( !stricmp( szToken, "die" ) )
-			{
-				pType->m_iCollision = COLLISION_DIE;
-			}
-			else if ( !stricmp( szToken, "bounce" ) )
-			{
-				pType->m_iCollision = COLLISION_BOUNCE;
-			}
-		}
-*/
 		// get the next token
 		szFile = gEngfuncs.COM_ParseFile(szFile, szToken);
 	}
@@ -571,7 +554,7 @@ void ParticleSystem::CalculateDistance()
 }
 
 
-bool ParticleSystem::UpdateSystem(float frametime, /*vec3_t &right, vec3_t &up,*/ int messagenum)
+bool ParticleSystem::UpdateSystem(float frametime, int messagenum)
 {
 	// the entity emitting this system
 	cl_entity_t* source = gEngfuncs.GetEntityByIndex(m_iEntIndex);
@@ -583,7 +566,7 @@ bool ParticleSystem::UpdateSystem(float frametime, /*vec3_t &right, vec3_t &up,*
 	if (m_pMainParticle == NULL)
 	{
 		//	gEngfuncs.Con_Printf("body %d\n", source->curstate.body);
-		if (source->curstate.body)
+		if (source->curstate.body != 0)
 		{
 			ParticleType* pType = m_pMainType; //GetMainType();
 			if (pType)
@@ -647,7 +630,7 @@ bool ParticleSystem::UpdateSystem(float frametime, /*vec3_t &right, vec3_t &up,*
 	return true;
 }
 
-void ParticleSystem::DrawSystem() //vec3_t &right, vec3_t &up)
+void ParticleSystem::DrawSystem()
 {
 	Vector normal, forward, right, up;
 
@@ -661,36 +644,6 @@ void ParticleSystem::DrawSystem() //vec3_t &right, vec3_t &up)
 	}
 }
 
-/*bool ParticleSystem::ParticleIsVisible( particle* part )
-{
-	return true;
-
-	vec3_t normal, forward, right, up;
-	gEngfuncs.GetViewAngles((float*)normal);
-	AngleVectors( normal, forward, right, up );
-
-	Vector vec = ( part->origin - (gEngfuncs.GetLocalPlayer())->origin );
-	Vector vecDir = vec.Normalize( );
-	float distance = vec.Length();
-	
-	
-
-	if ( DotProduct ( vecDir, forward ) < 0 )
-		return false;
-/*
-	float dot = fabs( DotProduct ( vecDir, right ) ) + fabs( DotProduct ( vecDir, up ) ) * 0.5;
-	// tweak for distance
-	dot *= 1.0 + 0.2 * ( distance / 8192 );
-
-	// try to use a smaller arc when zooming (smooth sniping)
-	float arc = .75;
-	
-	if ( dot > arc )
-		return false;
-*/
-//	return true;
-//}
-
 bool ParticleSystem::UpdateParticle(particle* part, float frametime)
 {
 	//	gEngfuncs.Con_Printf("UpdParticle %f: age %f, life %f\n", frametime, part->age, part->age_death);
@@ -700,15 +653,13 @@ bool ParticleSystem::UpdateParticle(particle* part, float frametime)
 	part->age += frametime;
 
 	// is this particle bound to an entity?
-	if (part->m_iEntIndex)
+	if (part->m_iEntIndex != 0)
 	{
 		cl_entity_t* source = gEngfuncs.GetEntityByIndex(m_iEntIndex);
-		if (source && source->curstate.body)
+		if (source && source->curstate.body != 0)
 		{
 			part->velocity = (source->curstate.origin - part->origin) / frametime;
 			part->origin = source->curstate.origin;
-			//			part->velocity = source->curstate.velocity;
-			//			gEngfuncs.Con_Printf("using velocity %f %f %f\n", part->velocity.x, part->velocity.y, part->velocity.z);
 		}
 		else
 		{
@@ -724,7 +675,7 @@ bool ParticleSystem::UpdateParticle(particle* part, float frametime)
 
 		// apply acceleration and velocity
 		Vector vecOldPos = part->origin;
-		if (part->m_fDrag)
+		if (part->m_fDrag != 0)
 			VectorMA(part->velocity, -part->m_fDrag * frametime, part->velocity - part->m_vecWind, part->velocity);
 		VectorMA(part->velocity, frametime, part->accel, part->velocity);
 		VectorMA(part->origin, frametime, part->velocity, part->origin);
@@ -747,7 +698,7 @@ bool ParticleSystem::UpdateParticle(particle* part, float frametime)
 
 
 	// spray children
-	if (part->age_spray && part->age > part->age_spray)
+	if (part->age_spray != 0 && part->age > part->age_spray)
 	{
 		part->age_spray = part->age + 1 / part->pType->m_SprayRate.GetInstance();
 
@@ -760,7 +711,7 @@ bool ParticleSystem::UpdateParticle(particle* part, float frametime)
 				pChild->origin = part->origin;
 				float fSprayForce = part->pType->m_SprayForce.GetInstance();
 				pChild->velocity = part->velocity;
-				if (fSprayForce)
+				if (fSprayForce != 0)
 				{
 					float fSprayPitch = part->pType->m_SprayPitch.GetInstance();
 					float fSprayYaw = part->pType->m_SprayYaw.GetInstance();
@@ -780,7 +731,7 @@ bool ParticleSystem::UpdateParticle(particle* part, float frametime)
 	part->m_fGreen += part->m_fGreenStep * frametime;
 	part->m_fBlue += part->m_fBlueStep * frametime;
 	part->frame += part->m_fFrameStep * frametime;
-	if (part->m_fAngleStep)
+	if (part->m_fAngleStep != 0)
 	{
 		part->m_fAngle += part->m_fAngleStep * frametime;
 		while (part->m_fAngle < 0)
@@ -828,7 +779,7 @@ void ParticleSystem::DrawParticle(particle* part, Vector& right, Vector& up)
 		if (pDraw->pType->m_hSprite == 0)
 			continue;
 
-		if (pDraw->pType->m_iDrawCond)
+		if (pDraw->pType->m_iDrawCond != 0)
 		{
 			if (iContents == 0)
 				iContents = gEngfuncs.PM_PointContents(origin, NULL);
@@ -846,7 +797,7 @@ void ParticleSystem::DrawParticle(particle* part, Vector& right, Vector& up)
 		while (pDraw->frame < 0)
 			pDraw->frame += pModel->numframes;
 
-		if (!gEngfuncs.pTriAPI->SpriteTexture(pModel, int(pDraw->frame)))
+		if (gEngfuncs.pTriAPI->SpriteTexture(pModel, int(pDraw->frame)) == NULL)
 			continue;
 
 		gEngfuncs.pTriAPI->RenderMode(pDraw->pType->m_iRenderMode);

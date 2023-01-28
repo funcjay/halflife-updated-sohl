@@ -75,7 +75,7 @@ IMPLEMENT_SAVERESTORE(CBarnacle, CBaseMonster);
 //=========================================================
 int CBarnacle::Classify()
 {
-	return m_iClass ? m_iClass : CLASS_ALIEN_MONSTER;
+	return m_iClass != 0 ? m_iClass : CLASS_ALIEN_MONSTER;
 }
 
 //=========================================================
@@ -104,8 +104,8 @@ void CBarnacle::Spawn()
 {
 	Precache();
 
-	if (pev->model)
-		SET_MODEL(ENT(pev), STRING(pev->model)); //LRC
+	if (!FStringNull(pev->model))
+		SET_MODEL(ENT(pev), (char*)STRING(pev->model)); //LRC
 	else
 		SET_MODEL(ENT(pev), "models/barnacle.mdl");
 	UTIL_SetSize(pev, Vector(-16, -16, -32), Vector(16, 16, 0));
@@ -115,7 +115,8 @@ void CBarnacle::Spawn()
 	pev->takedamage = DAMAGE_AIM;
 	m_bloodColor = BLOOD_COLOR_RED;
 	pev->effects = EF_INVLIGHT; // take light from the ceiling
-	pev->health = 25;
+	if (pev->health == 0)
+		pev->health = 25;
 	m_flFieldOfView = 0.5; // indicates the width of this monster's forward view cone ( as a dotproduct result )
 	m_MonsterState = MONSTERSTATE_NONE;
 	m_flKillVictimTime = 0;
@@ -323,7 +324,6 @@ void CBarnacle::BarnacleThink()
 		}
 	}
 
-	// ALERT( at_console, "tounge %f\n", m_flAltitude + m_flTongueAdj );
 	SetBoneController(0, -(m_flAltitude + m_flTongueAdj));
 	StudioFrameAdvance(0.1);
 }
@@ -347,8 +347,6 @@ void CBarnacle::Killed(entvars_t* pevAttacker, int iGib)
 			pVictim->BarnacleVictimReleased();
 		}
 	}
-
-	//	CGib::SpawnRandomGibs( pev, 4, 1 );
 
 	switch (RANDOM_LONG(0, 1))
 	{
@@ -391,7 +389,7 @@ void CBarnacle::WaitTillDead()
 //=========================================================
 void CBarnacle::Precache()
 {
-	if (pev->model)
+	if (!FStringNull(pev->model))
 		PRECACHE_MODEL((char*)STRING(pev->model)); //LRC
 	else
 		PRECACHE_MODEL("models/barnacle.mdl");

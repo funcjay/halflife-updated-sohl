@@ -77,11 +77,6 @@ public:
 	// (Do a precise attack if we'll be turning to face the target, but we haven't just walked to the target.)
 	bool PreciseAttack()
 	{
-		//	if (m_fTurnType != 1) { ALERT(at_console,"preciseattack fails check 1\n"); return false; }
-		//	if (m_fMoveTo == 0) { ALERT(at_console,"preciseattack fails check 2\n"); return false; }
-		//	if (m_fMoveTo != 5 && m_iszAttack == 0) { ALERT(at_console,"preciseattack fails check 3\n"); return false; }
-		//	ALERT(at_console,"preciseattack passes!\n");
-		//	return true;
 		return m_fTurnType == 1 && (m_fMoveTo == 5 || (m_fMoveTo != 0 && !FStrEq(STRING(m_iszAttack), STRING(m_iszMoveTarget))));
 	};
 
@@ -117,7 +112,6 @@ public:
 	int m_saved_movetype;
 	int m_saved_solid;
 	int m_saved_effects;
-	//	Vector m_vecOrigOrigin;
 	bool m_interruptable;
 };
 

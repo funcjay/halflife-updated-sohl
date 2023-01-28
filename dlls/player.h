@@ -17,19 +17,6 @@
 
 #include "pm_materials.h"
 
-
-//LRC - code for Werner Spahl's mod.
-//#define XENWARRIOR
-
-#ifdef XENWARRIOR
-#define SOUND_FLASHLIGHT_IDLE "ambience/alien_clicker1.wav"
-#define LF_FLASH_RESUME (1 << 13)
-#define LF_FLASH_RESUME2 (1 << 14)
-
-extern float g_fEnvFadeTime;
-#endif
-
-
 #define PLAYER_FATAL_FALL_SPEED 1024															  // approx 60 feet
 #define PLAYER_MAX_SAFE_FALL_SPEED 580															  // approx 20 feet
 #define DAMAGE_FOR_FALL_SPEED (float)100 / (PLAYER_FATAL_FALL_SPEED - PLAYER_MAX_SAFE_FALL_SPEED) // damage per unit per second.

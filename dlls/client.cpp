@@ -529,7 +529,7 @@ void ClientCommand(edict_t* pEntity)
 	}
 	else if (FStrEq(pcmd, "fire")) //LRC - trigger entities manually
 	{
-		if (g_psv_cheats->value)
+		if (g_psv_cheats->value != 0)
 		{
 			CBaseEntity* pPlayer = CBaseEntity::Instance(pEntity);
 			if (CMD_ARGC() > 1)
@@ -958,10 +958,6 @@ void ClientPrecache()
 	PRECACHE_SOUND("common/wpn_moveselect.wav");
 	PRECACHE_SOUND("common/wpn_select.wav");
 	PRECACHE_SOUND("common/wpn_denyselect.wav");
-
-#ifdef XENWARRIOR
-	PRECACHE_SOUND(SOUND_FLASHLIGHT_IDLE);
-#endif
 
 
 	// geiger sounds

@@ -88,7 +88,7 @@ public:
 	bool IsDefined()
 	{
 		return m_bDefined;
-	} //(m_fMin == 0 && m_fMax == 0); }
+	}
 };
 
 #define MAX_TYPENAME 30
@@ -103,7 +103,6 @@ public:
 
 	int m_iRenderMode;
 	int m_iDrawCond;
-	//	int m_iCollision;
 	RandomRange m_Bounce;
 	RandomRange m_BounceFriction;
 	bool m_bBouncing;
@@ -151,7 +150,7 @@ public:
 	char m_szName[MAX_TYPENAME];
 
 	// here is a particle system. Add a (set of) particles according to this type, and initialise their values.
-	particle* CreateParticle(ParticleSystem* pSys); //particle *pPart);
+	particle* CreateParticle(ParticleSystem* pSys);
 
 	// initialise this particle. Does not define velocity or age.
 	void InitParticle(particle* pPart, ParticleSystem* pSys);
@@ -160,13 +159,11 @@ public:
 class ParticleSystem
 {
 public:
-	ParticleSystem(int entindex, char* szFilename); //int iParticles );
-													//	ParticleSystem( int iParticles );
-	~ParticleSystem(void);
+	ParticleSystem(int entindex, char* szFilename);
+	~ParticleSystem();
 	void AllocateParticles(int iParticles);
 	void CalculateDistance();
 
-	//	ParticleType *GetMainType() { return GetType(m_szMainType); }
 	ParticleType* GetType(const char* szName);
 	ParticleType* AddPlaceholderType(const char* szName);
 	ParticleType* ParseType(char*& szFile);
@@ -177,10 +174,10 @@ public:
 	static bool c_bCosTableInit;
 
 	// General functions
-	bool UpdateSystem(float frametime, /*vec3_t &right, vec3_t &up,*/ int messagenum); // If this function returns false, the manager deletes the system
-	void DrawSystem();																   //vec3_t &right, vec3_t &up);
-	particle* ActivateParticle();													   // adds one of the free particles to the active list, and returns it for initialisation.
-																					   //MUST CHECK WHETHER THIS RESULT IS NULL!
+	bool UpdateSystem(float frametime, int messagenum);	// If this function returns false, the manager deletes the system
+	void DrawSystem();									//vec3_t &right, vec3_t &up);
+	particle* ActivateParticle();						// adds one of the free particles to the active list, and returns it for initialisation.
+														//MUST CHECK WHETHER THIS RESULT IS NULL!
 
 	static float CosLookup(int angle) { return angle < 0 ? c_fCosTable[angle + 360] : c_fCosTable[angle]; }
 	static float SinLookup(int angle) { return angle < -90 ? c_fCosTable[angle + 450] : c_fCosTable[angle + 90]; }
@@ -188,9 +185,6 @@ public:
 	// returns false if the particle has died
 	bool UpdateParticle(particle* part, float frametime);
 	void DrawParticle(particle* part, Vector& right, Vector& up);
-
-	// Utility functions that have to be public
-	//	bool ParticleIsVisible( particle* part );
 
 	// Pointer to next system for linked list structure
 	ParticleSystem* m_pNextSystem;
@@ -202,13 +196,10 @@ public:
 private:
 	// the block of allocated particles
 	particle* m_pAllParticles;
-	// First particles in the linked list for the active particles and the dead particles
-	//	particle*		m_pActiveParticle;
 	particle* m_pFreeParticle;
 	particle* m_pMainParticle; // the "source" particle.
 
 	ParticleType* m_pFirstType;
 
 	ParticleType* m_pMainType;
-	//char m_szMainType[MAX_TYPENAME]; // name of the main particle type
 };

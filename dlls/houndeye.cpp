@@ -127,7 +127,7 @@ IMPLEMENT_SAVERESTORE(CHoundeye, CSquadMonster);
 //=========================================================
 int CHoundeye::Classify()
 {
-	return m_iClass ? m_iClass : CLASS_ALIEN_MONSTER;
+	return m_iClass != 0 ? m_iClass : CLASS_ALIEN_MONSTER;
 }
 
 //=========================================================
@@ -329,8 +329,8 @@ void CHoundeye::Spawn()
 {
 	Precache();
 
-	if (pev->model)
-		SET_MODEL(ENT(pev), STRING(pev->model)); //LRC
+	if (!FStringNull(pev->model))
+		SET_MODEL(ENT(pev), (char*)STRING(pev->model)); //LRC
 	else
 		SET_MODEL(ENT(pev), "models/houndeye.mdl");
 	UTIL_SetSize(pev, Vector(-16, -16, 0), Vector(16, 16, 36));
@@ -356,7 +356,7 @@ void CHoundeye::Spawn()
 //=========================================================
 void CHoundeye::Precache()
 {
-	if (pev->model)
+	if (!FStringNull(pev->model))
 		PRECACHE_MODEL((char*)STRING(pev->model)); //LRC
 	else
 		PRECACHE_MODEL("models/houndeye.mdl");
@@ -668,8 +668,6 @@ void CHoundeye::SonicAttack()
 					}
 				}
 
-				//ALERT ( at_aiconsole, "Damage: %f\n", flAdjustedDamage );
-
 				if (flAdjustedDamage > 0)
 				{
 					pEntity->TakeDamage(pev, pev, flAdjustedDamage, DMG_SONIC | DMG_ALWAYSGIB);
@@ -725,42 +723,6 @@ void CHoundeye::StartTask(Task_t* pTask)
 	case TASK_RANGE_ATTACK1:
 	{
 		m_IdealActivity = ACT_RANGE_ATTACK1;
-
-		/*
-			if ( InSquad() )
-			{
-				// see if there is a battery to connect to. 
-				CSquadMonster *pSquad = m_pSquadLeader;
-
-				while ( pSquad )
-				{
-					if ( pSquad->m_iMySlot == bits_SLOT_HOUND_BATTERY )
-					{
-						// draw a beam.
-						MESSAGE_BEGIN( MSG_BROADCAST, SVC_TEMPENTITY );
-							WRITE_BYTE( TE_BEAMENTS );
-							WRITE_SHORT( ENTINDEX( this->edict() ) );
-							WRITE_SHORT( ENTINDEX( pSquad->edict() ) );
-							WRITE_SHORT( m_iSpriteTexture );
-							WRITE_BYTE( 0 ); // framestart
-							WRITE_BYTE( 0 ); // framerate
-							WRITE_BYTE( 10 ); // life
-							WRITE_BYTE( 40 );  // width
-							WRITE_BYTE( 10 );   // noise
-							WRITE_BYTE( 0  );   // r, g, b
-							WRITE_BYTE( 50 );   // r, g, b
-							WRITE_BYTE( 250);   // r, g, b
-							WRITE_BYTE( 255 );	// brightness
-							WRITE_BYTE( 30 );		// speed
-						MESSAGE_END();
-						break;
-					}
-
-					pSquad = pSquad->m_pSquadNext;
-				}
-			}
-*/
-
 		break;
 	}
 	case TASK_SPECIAL_ATTACK1:
@@ -969,8 +931,6 @@ Task_t tlHoundSleep[] =
 		{TASK_HOUND_FALL_ASLEEP, (float)0},
 		{TASK_WAIT_RANDOM, (float)25},
 		{TASK_HOUND_CLOSE_EYE, (float)0},
-		//{ TASK_WAIT,				(float)10				},
-		//{ TASK_WAIT_RANDOM,			(float)10				},
 };
 
 Schedule_t slHoundSleep[] =
@@ -1197,14 +1157,6 @@ Schedule_t* CHoundeye::GetScheduleOfType(int Type)
 	case SCHED_RANGE_ATTACK1:
 	{
 		return &slHoundRangeAttack[0];
-		/*
-			if ( InSquad() )
-			{
-				return &slHoundRangeAttack[ RANDOM_LONG( 0, 1 ) ];
-			}
-
-			return &slHoundRangeAttack[ 1 ];
-*/
 	}
 	case SCHED_SPECIAL_ATTACK1:
 	{

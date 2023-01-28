@@ -576,7 +576,7 @@ void CScientist::RunTask(Task_t* pTask)
 //=========================================================
 int CScientist::Classify()
 {
-	return m_iClass ? m_iClass : CLASS_HUMAN_PASSIVE;
+	return m_iClass != 0 ? m_iClass : CLASS_HUMAN_PASSIVE;
 }
 
 
@@ -651,8 +651,8 @@ void CScientist::Spawn()
 
 	Precache();
 
-	if (pev->model)
-		SET_MODEL(ENT(pev), STRING(pev->model)); //LRC
+	if (!FStringNull(pev->model))
+		SET_MODEL(ENT(pev), (char*)STRING(pev->model)); //LRC
 	else
 		SET_MODEL(ENT(pev), "models/scientist.mdl");
 	UTIL_SetSize(pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
@@ -665,8 +665,6 @@ void CScientist::Spawn()
 	pev->view_ofs = Vector(0, 0, 50);  // position of the eyes relative to monster's origin.
 	m_flFieldOfView = VIEW_FIELD_WIDE; // NOTE: we need a wide field of view so scientists will notice player and say hello
 	m_MonsterState = MONSTERSTATE_NONE;
-
-	//	m_flDistTooFar		= 256.0;
 
 	m_afCapability = bits_CAP_HEAR | bits_CAP_TURN_HEAD | bits_CAP_OPEN_DOORS | bits_CAP_AUTO_DOORS | bits_CAP_USE;
 
@@ -686,7 +684,7 @@ void CScientist::Spawn()
 //=========================================================
 void CScientist::Precache()
 {
-	if (pev->model)
+	if (!FStringNull(pev->model))
 		PRECACHE_MODEL((char*)STRING(pev->model)); //LRC
 	else
 		PRECACHE_MODEL("models/scientist.mdl");
@@ -717,21 +715,21 @@ void CScientist::TalkInit()
 
 	// scientists speach group names (group names are in sentences.txt)
 
-	if (!m_iszSpeakAs)
+	if (FStringNull(m_iszSpeakAs))
 	{
 		m_szGrp[TLK_ANSWER] = "SC_ANSWER";
 		m_szGrp[TLK_QUESTION] = "SC_QUESTION";
 		m_szGrp[TLK_IDLE] = "SC_IDLE";
 		m_szGrp[TLK_STARE] = "SC_STARE";
-		if (pev->spawnflags & SF_MONSTER_PREDISASTER)
+		if (FBitSet(pev->spawnflags, SF_MONSTER_PREDISASTER))
 			m_szGrp[TLK_USE] = "SC_PFOLLOW";
 		else
 			m_szGrp[TLK_USE] = "SC_OK";
-		if (pev->spawnflags & SF_MONSTER_PREDISASTER)
+		if (FBitSet(pev->spawnflags, SF_MONSTER_PREDISASTER))
 			m_szGrp[TLK_UNUSE] = "SC_PWAIT";
 		else
 			m_szGrp[TLK_UNUSE] = "SC_WAIT";
-		if (pev->spawnflags & SF_MONSTER_PREDISASTER)
+		if (FBitSet(pev->spawnflags, SF_MONSTER_PREDISASTER))
 			m_szGrp[TLK_DECLINE] = "SC_POK";
 		else
 			m_szGrp[TLK_DECLINE] = "SC_NOTOK";
@@ -1272,12 +1270,12 @@ typedef enum
 //
 void CSittingScientist::Spawn()
 {
-	if (pev->model)
+	if (!FStringNull(pev->model))
 		PRECACHE_MODEL((char*)STRING(pev->model)); //LRC
 	else
 		PRECACHE_MODEL("models/scientist.mdl");
-	if (pev->model)
-		SET_MODEL(ENT(pev), STRING(pev->model)); //LRC
+	if (!FStringNull(pev->model))
+		SET_MODEL(ENT(pev), (char*)STRING(pev->model)); //LRC
 	else
 		SET_MODEL(ENT(pev), "models/scientist.mdl");
 	Precache();
@@ -1327,7 +1325,7 @@ void CSittingScientist::Precache()
 //=========================================================
 int CSittingScientist::Classify()
 {
-	return m_iClass ? m_iClass : CLASS_HUMAN_PASSIVE;
+	return m_iClass != 0 ? m_iClass : CLASS_HUMAN_PASSIVE;
 }
 
 

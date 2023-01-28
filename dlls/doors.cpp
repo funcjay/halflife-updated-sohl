@@ -42,7 +42,7 @@ public:
 
 	int ObjectCaps() override
 	{
-		if (pev->spawnflags & SF_ITEM_USE_ONLY)
+		if (FBitSet(pev->spawnflags, SF_ITEM_USE_ONLY))
 		{
 			return (CBaseToggle::ObjectCaps() & ~FCAP_ACROSS_TRANSITION) | FCAP_IMPULSE_USE |
 				   (m_iDirectUse ? FCAP_ONLYDIRECT_USE : 0);
@@ -251,17 +251,17 @@ bool CBaseDoor::KeyValue(KeyValueData* pkvd)
 	}
 	else if (FStrEq(pkvd->szKeyName, "immediatemode"))
 	{
-		m_iImmediateMode = atoi(pkvd->szValue);
+		m_iImmediateMode = atoi(pkvd->szValue) != 0;
 		return true;
 	}
 	else if (FStrEq(pkvd->szKeyName, "onoffmode"))
 	{
-		m_iOnOffMode = atoi(pkvd->szValue);
+		m_iOnOffMode = atoi(pkvd->szValue) != 0;
 		return true;
 	}
 	else if (FStrEq(pkvd->szKeyName, "directuse"))
 	{
-		m_iDirectUse = atoi(pkvd->szValue);
+		m_iDirectUse = atoi(pkvd->szValue) != 0;
 		return true;
 	}
 	else if (FStrEq(pkvd->szKeyName, "WaveHeight"))
@@ -1326,7 +1326,7 @@ void CMomentaryDoor::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE
 	Vector move = m_vecPosition1 + (value * (m_vecPosition2 - m_vecPosition1));
 
 	float speed = 0;
-	if (pev->speed)
+	if (pev->speed != 0)
 	{
 		//LRC- move at the given speed, if any.
 		speed = pev->speed;

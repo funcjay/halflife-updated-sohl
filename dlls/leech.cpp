@@ -181,14 +181,11 @@ const char* CLeech::pAlertSounds[] =
 void CLeech::Spawn()
 {
 	Precache();
-	if (pev->model)
-		SET_MODEL(ENT(pev), STRING(pev->model)); //LRC
+	if (!FStringNull(pev->model))
+		SET_MODEL(ENT(pev), (char*)STRING(pev->model)); //LRC
 	else
 		SET_MODEL(ENT(pev), "models/leech.mdl");
-	// Just for fun
-	//	SET_MODEL(ENT(pev), "models/icky.mdl");
 
-	//	UTIL_SetSize( pev, g_vecZero, g_vecZero );
 	UTIL_SetSize(pev, Vector(-1, -1, 0), Vector(1, 1, 2));
 	// Don't push the minz down too much or the water check will fail because this entity is really point-sized
 	pev->solid = SOLID_SLIDEBOX;
@@ -297,8 +294,7 @@ void CLeech::AlertSound()
 
 void CLeech::Precache()
 {
-	//PRECACHE_MODEL("models/icky.mdl");
-	if (pev->model)
+	if (!FStringNull(pev->model))
 		PRECACHE_MODEL((char*)STRING(pev->model)); //LRC
 	else
 		PRECACHE_MODEL("models/leech.mdl");
@@ -376,8 +372,6 @@ float CLeech::ObstacleDistance(CBaseEntity* pTarget)
 	TraceResult tr;
 	Vector vecTest;
 
-	// use VELOCITY, not angles, not all boids point the direction they are flying
-	//Vector vecDir = UTIL_VecToAngles( pev->velocity );
 	MakeVectors();
 
 	// check for obstacle ahead
@@ -387,8 +381,6 @@ float CLeech::ObstacleDistance(CBaseEntity* pTarget)
 	if (0 != tr.fStartSolid)
 	{
 		pev->speed = -LEECH_SWIM_SPEED * 0.5;
-		//		ALERT( at_console, "Stuck from (%f %f %f) to (%f %f %f)\n", pev->oldorigin.x, pev->oldorigin.y, pev->oldorigin.z, pev->origin.x, pev->origin.y, pev->origin.z );
-		//		UTIL_SetOrigin( pev, pev->oldorigin );
 	}
 
 	if (tr.flFraction != 1.0)
@@ -695,7 +687,6 @@ void CLeech::Killed(entvars_t* pevAttacker, int iGib)
 	Vector vecSplatDir;
 	TraceResult tr;
 
-	//ALERT(at_aiconsole, "Leech: killed\n");
 	// tell owner ( if any ) that we're dead.This is mostly for MonsterMaker functionality.
 	CBaseEntity* pOwner = CBaseEntity::Instance(pev->owner);
 	if (pOwner)

@@ -73,12 +73,6 @@ void CGib::SpawnStickyGibs(entvars_t* pevVictim, Vector vecOrigin, int cGibs)
 			pGib->pev->origin.y = vecOrigin.y + RANDOM_FLOAT(-3, 3);
 			pGib->pev->origin.z = vecOrigin.z + RANDOM_FLOAT(-3, 3);
 
-			/*
-			pGib->pev->origin.x = pevVictim->absmin.x + pevVictim->size.x * (RANDOM_FLOAT ( 0 , 1 ) );
-			pGib->pev->origin.y = pevVictim->absmin.y + pevVictim->size.y * (RANDOM_FLOAT ( 0 , 1 ) );
-			pGib->pev->origin.z = pevVictim->absmin.z + pevVictim->size.z * (RANDOM_FLOAT ( 0 , 1 ) );
-			*/
-
 			// make the gib fly away from the attack vector
 			pGib->pev->velocity = g_vecAttackDir * -1;
 
@@ -180,11 +174,11 @@ void CGib::SpawnHeadGib(entvars_t* pevVictim, const char* szGibModel)
 void CGib::SpawnRandomGibs(entvars_t* pevVictim, int cGibs, bool human)
 {
 	if (g_Language == LANGUAGE_GERMAN)
-		SpawnRandomGibs(pevVictim, cGibs, 1, "models/germangibs.mdl");
+		SpawnRandomGibs(pevVictim, cGibs, true, "models/germangibs.mdl");
 	else if (human)
-		SpawnRandomGibs(pevVictim, cGibs, 1, "models/hgibs.mdl");
+		SpawnRandomGibs(pevVictim, cGibs, true, "models/hgibs.mdl");
 	else
-		SpawnRandomGibs(pevVictim, cGibs, 0, "models/agibs.mdl");
+		SpawnRandomGibs(pevVictim, cGibs, false, "models/agibs.mdl");
 }
 
 //LRC - changed signature, to support custom gib models
@@ -267,8 +261,7 @@ bool CBaseMonster::HasHumanGibs()
 	int myClass = Classify();
 
 	// these types of monster don't use gibs
-	if (myClass == CLASS_NONE || myClass == CLASS_MACHINE ||
-		myClass == CLASS_PLAYER_BIOWEAPON && myClass == CLASS_ALIEN_BIOWEAPON)
+	if (myClass == CLASS_NONE || myClass == CLASS_MACHINE || myClass == CLASS_PLAYER_BIOWEAPON)
 	{
 		return false;
 	}
@@ -276,15 +269,6 @@ bool CBaseMonster::HasHumanGibs()
 	{
 		return (this->m_bloodColor == BLOOD_COLOR_RED);
 	}
-
-	//	if ( myClass == CLASS_HUMAN_MILITARY ||
-	//		 myClass == CLASS_PLAYER_ALLY	||
-	//		 myClass == CLASS_HUMAN_PASSIVE  ||
-	//		 myClass == CLASS_PLAYER )
-	//
-	//		 return true;
-	//
-	//	return false;
 }
 
 
@@ -294,8 +278,7 @@ bool CBaseMonster::HasAlienGibs()
 	int myClass = Classify();
 
 	// these types of monster don't use gibs
-	if (myClass == CLASS_NONE || myClass == CLASS_MACHINE ||
-		myClass == CLASS_PLAYER_BIOWEAPON && myClass == CLASS_ALIEN_BIOWEAPON)
+	if (myClass == CLASS_NONE || myClass == CLASS_MACHINE || myClass == CLASS_PLAYER_BIOWEAPON)
 	{
 		return false;
 	}
@@ -303,19 +286,6 @@ bool CBaseMonster::HasAlienGibs()
 	{
 		return (this->m_bloodColor == BLOOD_COLOR_GREEN);
 	}
-
-	//	int myClass = Classify();
-	//
-	//	if ( myClass == CLASS_ALIEN_MILITARY ||
-	//		 myClass == CLASS_ALIEN_MONSTER	||
-	//		 myClass == CLASS_ALIEN_PASSIVE  ||
-	//		 myClass == CLASS_INSECT  ||
-	//		 myClass == CLASS_ALIEN_PREDATOR  ||
-	//		 myClass == CLASS_ALIEN_PREY )
-	//
-	//		 return true;
-	//
-	//	return false;
 }
 
 
@@ -347,7 +317,7 @@ void CBaseMonster::GibMonster()
 		if (CVAR_GET_FLOAT("violence_hgibs") != 0)
 		{
 			CGib::SpawnHeadGib(pev, STRING(iszCustomGibs));
-			CGib::SpawnRandomGibs(pev, 4, 1, STRING(iszCustomGibs));
+			CGib::SpawnRandomGibs(pev, 4, true, STRING(iszCustomGibs));
 		}
 		gibbed = true;
 	}
@@ -977,7 +947,7 @@ bool CBaseMonster::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, f
 	if ((pev->flags & FL_MONSTER) != 0 && !FNullEnt(pevAttacker))
 	{
 		//LRC - new behaviours, for m_iPlayerReact.
-		if (pevAttacker->flags & FL_CLIENT)
+		if (FBitSet(pevAttacker->flags, FL_CLIENT))
 		{
 			if (m_iPlayerReact == 2)
 			{
@@ -989,7 +959,7 @@ bool CBaseMonster::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, f
 				// try to decide whether it was deliberate... if I have an enemy, assume it was just crossfire.
 				if (m_hEnemy == NULL)
 				{
-					if ((m_afMemory & bits_MEMORY_SUSPICIOUS) || UTIL_IsFacing(pevAttacker, pev->origin))
+					if (FBitSet(m_afMemory, bits_MEMORY_SUSPICIOUS) || UTIL_IsFacing(pevAttacker, pev->origin))
 						Remember(bits_MEMORY_PROVOKED);
 					else
 						Remember(bits_MEMORY_SUSPICIOUS);

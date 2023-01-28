@@ -50,7 +50,6 @@ class CSqueakGrenade : public CGrenade
 
 	static float m_flNextBounceSoundTime;
 
-	// CBaseEntity *m_pTarget;
 	float m_flDie;
 	Vector m_vecTarget;
 	float m_flNextHunt;
@@ -79,7 +78,7 @@ IMPLEMENT_SAVERESTORE(CSqueakGrenade, CGrenade);
 
 int CSqueakGrenade::Classify()
 {
-	if (m_iClass)
+	if (m_iClass != 0)
 		return m_iClass;
 
 	if (m_iMyClass != 0)

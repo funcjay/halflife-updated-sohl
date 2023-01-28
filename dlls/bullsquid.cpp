@@ -429,7 +429,7 @@ int CBullsquid::ISoundMask()
 //=========================================================
 int CBullsquid::Classify()
 {
-	return m_iClass ? m_iClass : CLASS_ALIEN_PREDATOR;
+	return m_iClass != 0 ? m_iClass : CLASS_ALIEN_PREDATOR;
 }
 
 //=========================================================
@@ -693,8 +693,8 @@ void CBullsquid::Spawn()
 {
 	Precache();
 
-	if (pev->model)
-		SET_MODEL(ENT(pev), STRING(pev->model)); //LRC
+	if (!FStringNull(pev->model))
+		SET_MODEL(ENT(pev), (char*)STRING(pev->model)); //LRC
 	else
 		SET_MODEL(ENT(pev), "models/bullsquid.mdl");
 	UTIL_SetSize(pev, Vector(-32, -32, 0), Vector(32, 32, 64));
@@ -719,7 +719,7 @@ void CBullsquid::Spawn()
 //=========================================================
 void CBullsquid::Precache()
 {
-	if (pev->model)
+	if (!FStringNull(pev->model))
 		PRECACHE_MODEL((char*)STRING(pev->model)); //LRC
 	else
 		PRECACHE_MODEL("models/bullsquid.mdl");

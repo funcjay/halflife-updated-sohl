@@ -348,8 +348,8 @@ private:
 class CHudParticle : public CHudBase
 {
 public:
-	bool Init(void) override;
-	bool VidInit(void) override;
+	bool Init() override;
+	bool VidInit() override;
 	bool Draw(float flTime) override;
 	int MsgFunc_Particle(const char* pszName, int iSize, void* pbuf);
 };

@@ -167,11 +167,11 @@ int DispatchSpawn(edict_t* pent)
 				return -1; // return that this entity should be deleted
 			if ((pEntity->pev->flags & FL_KILLME) != 0)
 				return -1;
-			if (g_iSkillLevel == SKILL_EASY && pEntity->m_iLFlags & LF_NOTEASY)
+			if (g_iSkillLevel == SKILL_EASY && FBitSet(pEntity->m_iLFlags, LF_NOTEASY))
 				return -1; //LRC
-			if (g_iSkillLevel == SKILL_MEDIUM && pEntity->m_iLFlags & LF_NOTMEDIUM)
+			if (g_iSkillLevel == SKILL_MEDIUM && FBitSet(pEntity->m_iLFlags, LF_NOTMEDIUM))
 				return -1; //LRC
-			if (g_iSkillLevel == SKILL_HARD && pEntity->m_iLFlags & LF_NOTHARD)
+			if (g_iSkillLevel == SKILL_HARD && FBitSet(pEntity->m_iLFlags, LF_NOTHARD))
 				return -1; //LRC
 		}
 
@@ -532,13 +532,13 @@ CBaseEntity* EHANDLE::operator->()
 void CBaseEntity::Activate()
 {
 	//LRC - rebuild the new assistlist as the game starts
-	if (m_iLFlags & LF_ASSISTLIST)
+	if (FBitSet(m_iLFlags, LF_ASSISTLIST))
 	{
 		UTIL_AddToAssistList(this);
 	}
 
 	//LRC - and the aliaslist too
-	if (m_iLFlags & LF_ALIASLIST)
+	if (FBitSet(m_iLFlags, LF_ALIASLIST))
 	{
 		UTIL_AddToAliasList((CBaseAlias*)this);
 	}
@@ -553,7 +553,7 @@ void CBaseEntity::Activate()
 //LRC- called by activate() to support movewith
 void CBaseEntity::InitMoveWith()
 {
-	if (!m_MoveWith)
+	if (m_MoveWith == NULL)
 		return;
 
 	m_pMoveWith = UTIL_FindEntityByTargetname(NULL, STRING(m_MoveWith));
@@ -648,7 +648,7 @@ void CBaseEntity::SetEternalThink()
 void CBaseEntity::SetNextThink(float delay, bool correctSpeed)
 {
 	// now monsters use this method, too.
-	if (m_pMoveWith || m_pChildMoveWith || pev->flags & FL_MONSTER)
+	if (m_pMoveWith || m_pChildMoveWith || FBitSet(pev->flags, FL_MONSTER))
 	{
 		// use the Assist system, so that thinking doesn't mess up movement.
 		if (pev->movetype == MOVETYPE_PUSH)
@@ -833,7 +833,7 @@ bool CBaseEntity::Save(CSave& save)
 
 	if (save.WriteEntVars("ENTVARS", pev))
 	{
-		if (pev->targetname)
+		if (!FStringNull(pev->targetname))
 			return save.WriteFields(STRING(pev->targetname), "BASE", this, m_SaveData, ARRAYSIZE(m_SaveData));
 		else
 			return save.WriteFields(STRING(pev->classname), "BASE", this, m_SaveData, ARRAYSIZE(m_SaveData));

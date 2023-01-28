@@ -712,7 +712,7 @@ void CGargantua::PrescheduleThink()
 //=========================================================
 int CGargantua::Classify()
 {
-	return m_iClass ? m_iClass : CLASS_ALIEN_MONSTER;
+	return m_iClass != 0 ? m_iClass : CLASS_ALIEN_MONSTER;
 }
 
 //=========================================================
@@ -753,8 +753,8 @@ void CGargantua::Spawn()
 {
 	Precache();
 
-	if (pev->model)
-		SET_MODEL(ENT(pev), STRING(pev->model)); //LRC
+	if (!FStringNull(pev->model))
+		SET_MODEL(ENT(pev), (char*)STRING(pev->model)); //LRC
 	else
 		SET_MODEL(ENT(pev), "models/garg.mdl");
 	UTIL_SetSize(pev, Vector(-32, -32, 0), Vector(32, 32, 64));
@@ -764,7 +764,6 @@ void CGargantua::Spawn()
 	m_bloodColor = BLOOD_COLOR_GREEN;
 	if (pev->health == 0)
 		pev->health = gSkillData.gargantuaHealth;
-	//pev->view_ofs		= Vector ( 0, 0, 96 );// taken from mdl file
 	m_flFieldOfView = -0.2; // width of forward view cone ( as a dotproduct result )
 	m_MonsterState = MONSTERSTATE_NONE;
 
@@ -784,7 +783,7 @@ void CGargantua::Spawn()
 //=========================================================
 void CGargantua::Precache()
 {
-	if (pev->model)
+	if (!FStringNull(pev->model))
 		PRECACHE_MODEL((char*)STRING(pev->model)); //LRC
 	else
 		PRECACHE_MODEL("models/garg.mdl");
@@ -1001,7 +1000,7 @@ void CGargantua::HandleAnimEvent(MonsterEvent_t* pEvent)
 		break;
 
 	case GARG_AE_BREATHE:
-		if (!(pev->spawnflags & SF_MONSTER_GAG) || m_MonsterState != MONSTERSTATE_IDLE)
+		if (!FBitSet(pev->spawnflags, SF_MONSTER_GAG) || m_MonsterState != MONSTERSTATE_IDLE)
 			EMIT_SOUND_DYN(edict(), CHAN_VOICE, RANDOM_SOUND_ARRAY(pBreatheSounds), 1.0, ATTN_GARG, 0, PITCH_NORM + RANDOM_LONG(-10, 10));
 		break;
 

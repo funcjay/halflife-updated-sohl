@@ -30,16 +30,8 @@
 //=========================================================
 void CBaseMonster::SetState(MONSTERSTATE State)
 {
-	/*
-	if ( State != m_MonsterState )
-	{
-		ALERT ( at_aiconsole, "State Changed to %d\n", State );
-	}
-*/
-
 	switch (State)
 	{
-
 	// Drop enemy pointers when going to idle
 	case MONSTERSTATE_IDLE:
 
@@ -60,9 +52,6 @@ void CBaseMonster::SetState(MONSTERSTATE State)
 //=========================================================
 void CBaseMonster::RunAI()
 {
-	// to test model's eye height
-	//UTIL_ParticleEffect ( pev->origin + pev->view_ofs, g_vecZero, 255, 10 );
-
 	// IDLE sound permitted in ALERT state is because monsters were silent in ALERT state. Only play IDLE sound in IDLE state
 	// once we have sounds for that state.
 	if ((m_MonsterState == MONSTERSTATE_IDLE || m_MonsterState == MONSTERSTATE_ALERT) && RANDOM_LONG(0, 99) == 0 && (pev->spawnflags & SF_MONSTER_GAG) == 0)
@@ -201,7 +190,6 @@ MONSTERSTATE CBaseMonster::GetIdealState()
 			if (m_hEnemy == NULL)
 			{
 				m_IdealMonsterState = MONSTERSTATE_ALERT;
-				// pev->effects = EF_BRIGHTFIELD;
 				ALERT(at_aiconsole, "***Combat state with no enemy!\n");
 			}
 			break;

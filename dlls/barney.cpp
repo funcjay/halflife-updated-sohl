@@ -253,7 +253,7 @@ int CBarney::ISoundMask()
 //=========================================================
 int CBarney::Classify()
 {
-	return m_iClass ? m_iClass : CLASS_PLAYER_ALLY;
+	return m_iClass != 0 ? m_iClass : CLASS_PLAYER_ALLY;
 }
 
 //=========================================================
@@ -265,7 +265,7 @@ void CBarney::AlertSound()
 	{
 		if (FOkToSpeak())
 		{
-			if (m_iszSpeakAs)
+			if (!FStringNull(m_iszSpeakAs))
 			{
 				char szBuf[32];
 				strcpy(szBuf, STRING(m_iszSpeakAs));
@@ -353,7 +353,7 @@ void CBarney::BarneyFirePistol()
 	SetBlending(0, angDir.x);
 	pev->effects = EF_MUZZLEFLASH;
 
-	if (pev->frags)
+	if (pev->frags != 0)
 	{
 		FireBullets(1, vecShootOrigin, vecShootDir, VECTOR_CONE_2DEGREES, 1024, BULLET_PLAYER_357);
 		if (RANDOM_LONG(0, 1))
@@ -420,8 +420,8 @@ void CBarney::Spawn()
 {
 	Precache();
 
-	if (pev->model)
-		SET_MODEL(ENT(pev), STRING(pev->model)); //LRC
+	if (!FStringNull(pev->model))
+		SET_MODEL(ENT(pev), (char*)STRING(pev->model)); //LRC
 	else
 		SET_MODEL(ENT(pev), "models/barney.mdl");
 	UTIL_SetSize(pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
@@ -450,7 +450,7 @@ void CBarney::Spawn()
 //=========================================================
 void CBarney::Precache()
 {
-	if (pev->model)
+	if (!FStringNull(pev->model))
 		PRECACHE_MODEL((char*)STRING(pev->model)); //LRC
 	else
 		PRECACHE_MODEL("models/barney.mdl");
@@ -475,26 +475,25 @@ void CBarney::Precache()
 // Init talk data
 void CBarney::TalkInit()
 {
-
 	CTalkMonster::TalkInit();
 
 	// barney speech group names (group names are in sentences.txt)
-
-	if (!m_iszSpeakAs)
+	
+	if (FStringNull(m_iszSpeakAs))
 	{
 		m_szGrp[TLK_ANSWER] = "BA_ANSWER";
 		m_szGrp[TLK_QUESTION] = "BA_QUESTION";
 		m_szGrp[TLK_IDLE] = "BA_IDLE";
 		m_szGrp[TLK_STARE] = "BA_STARE";
-		if (pev->spawnflags & SF_MONSTER_PREDISASTER) //LRC
+		if (FBitSet(pev->spawnflags, SF_MONSTER_PREDISASTER)) //LRC
 			m_szGrp[TLK_USE] = "BA_PFOLLOW";
 		else
 			m_szGrp[TLK_USE] = "BA_OK";
-		if (pev->spawnflags & SF_MONSTER_PREDISASTER)
+		if (FBitSet(pev->spawnflags, SF_MONSTER_PREDISASTER))
 			m_szGrp[TLK_UNUSE] = "BA_PWAIT";
 		else
 			m_szGrp[TLK_UNUSE] = "BA_WAIT";
-		if (pev->spawnflags & SF_MONSTER_PREDISASTER)
+		if (FBitSet(pev->spawnflags, SF_MONSTER_PREDISASTER))
 			m_szGrp[TLK_DECLINE] = "BA_POK";
 		else
 			m_szGrp[TLK_DECLINE] = "BA_NOTOK";
@@ -548,7 +547,7 @@ bool CBarney::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, float 
 		return ret;
 
 	// LRC - if my reaction to the player has been overridden, don't do this stuff
-	if (m_iPlayerReact)
+	if (m_iPlayerReact != 0)
 		return ret;
 
 	if (m_MonsterState != MONSTERSTATE_PRONE && (pevAttacker->flags & FL_CLIENT) != 0)
@@ -563,7 +562,7 @@ bool CBarney::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, float 
 			if ((m_afMemory & bits_MEMORY_SUSPICIOUS) != 0 || IsFacing(pevAttacker, pev->origin))
 			{
 				// Alright, now I'm pissed!
-				if (m_iszSpeakAs)
+				if (!FStringNull(m_iszSpeakAs))
 				{
 					char szBuf[32];
 					strcpy(szBuf, STRING(m_iszSpeakAs));
@@ -581,7 +580,7 @@ bool CBarney::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, float 
 			else
 			{
 				// Hey, be careful with that
-				if (m_iszSpeakAs)
+				if (!FStringNull(m_iszSpeakAs))
 				{
 					char szBuf[32];
 					strcpy(szBuf, STRING(m_iszSpeakAs));
@@ -597,7 +596,7 @@ bool CBarney::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, float 
 		}
 		else if (!(m_hEnemy->IsPlayer()) && pev->deadflag == DEAD_NO)
 		{
-			if (m_iszSpeakAs)
+			if (!FStringNull(m_iszSpeakAs))
 			{
 				char szBuf[32];
 				strcpy(szBuf, STRING(m_iszSpeakAs));
@@ -691,7 +690,7 @@ void CBarney::TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecDir,
 
 void CBarney::Killed(entvars_t* pevAttacker, int iGib)
 {
-	if (pev->body < m_iBaseBody + BARNEY_BODY_GUNGONE && !(pev->spawnflags & SF_MONSTER_NO_WPN_DROP))
+	if (pev->body < m_iBaseBody + BARNEY_BODY_GUNGONE && m_AllowItemDropping)
 	{ // drop the gun!
 		Vector vecGunPos;
 		Vector vecGunAngles;
@@ -701,7 +700,7 @@ void CBarney::Killed(entvars_t* pevAttacker, int iGib)
 		GetAttachment(0, vecGunPos, vecGunAngles);
 
 		CBaseEntity* pGun;
-		if (pev->frags)
+		if (pev->frags != 0)
 			pGun = DropItem("weapon_357", vecGunPos, vecGunAngles);
 		else
 			pGun = DropItem("weapon_9mmhandgun", vecGunPos, vecGunAngles);
@@ -780,7 +779,7 @@ Schedule_t* CBarney::GetSchedule()
 	if (HasConditions(bits_COND_ENEMY_DEAD) && FOkToSpeak())
 	{
 		// Hey, be careful with that
-		if (m_iszSpeakAs)
+		if (!FStringNull(m_iszSpeakAs))
 		{
 			char szBuf[32];
 			strcpy(szBuf, STRING(m_iszSpeakAs));

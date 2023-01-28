@@ -393,7 +393,7 @@ void CAGrunt::PainSound()
 //=========================================================
 int CAGrunt::Classify()
 {
-	return m_iClass ? m_iClass : CLASS_ALIEN_MILITARY;
+	return m_iClass != 0 ? m_iClass : CLASS_ALIEN_MILITARY;
 }
 
 //=========================================================
@@ -497,7 +497,7 @@ void CAGrunt::HandleAnimEvent(MonsterEvent_t* pEvent)
 		//LRC - hornets have the same allegiance as their creators
 		pHornetMonster->m_iPlayerReact = m_iPlayerReact;
 		pHornetMonster->m_iClass = m_iClass;
-		if (m_afMemory & bits_MEMORY_PROVOKED) // if I'm mad at the player, so are my hornets
+		if (FBitSet(m_afMemory, bits_MEMORY_PROVOKED)) // if I'm mad at the player, so are my hornets
 			pHornetMonster->Remember(bits_MEMORY_PROVOKED);
 
 		if (pHornetMonster)
@@ -608,8 +608,8 @@ void CAGrunt::Spawn()
 {
 	Precache();
 
-	if (pev->model)
-		SET_MODEL(ENT(pev), STRING(pev->model)); //LRC
+	if (!FStringNull(pev->model))
+		SET_MODEL(ENT(pev), (char*)STRING(pev->model)); //LRC
 	else
 		SET_MODEL(ENT(pev), "models/agrunt.mdl");
 	UTIL_SetSize(pev, Vector(-32, -32, 0), Vector(32, 32, 64));
@@ -638,7 +638,7 @@ void CAGrunt::Spawn()
 //=========================================================
 void CAGrunt::Precache()
 {
-	if (pev->model)
+	if (!FStringNull(pev->model))
 		PRECACHE_MODEL((char*)STRING(pev->model)); //LRC
 	else
 		PRECACHE_MODEL("models/agrunt.mdl");
@@ -1191,7 +1191,7 @@ Schedule_t* CAGrunt::GetScheduleOfType(int Type)
 
 void CAGrunt::Killed(entvars_t* pevAttacker, int iGib)
 {
-	if (pev->spawnflags & SF_MONSTER_NO_WPN_DROP)
+	if (m_AllowItemDropping)
 	{ // drop the hornetgun!
 		Vector vecGunPos;
 		Vector vecGunAngles;

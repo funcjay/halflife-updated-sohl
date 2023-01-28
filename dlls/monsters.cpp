@@ -65,20 +65,12 @@ TYPEDESCRIPTION CBaseMonster::m_SaveData[] =
 		DEFINE_FIELD(CBaseMonster, m_IdealMonsterState, FIELD_INTEGER),
 		DEFINE_FIELD(CBaseMonster, m_iTaskStatus, FIELD_INTEGER),
 
-		//Schedule_t			*m_pSchedule;
-
 		DEFINE_FIELD(CBaseMonster, m_iScheduleIndex, FIELD_INTEGER),
 		DEFINE_FIELD(CBaseMonster, m_afConditions, FIELD_INTEGER),
-		//WayPoint_t			m_Route[ ROUTE_SIZE ];
-		//	DEFINE_FIELD( CBaseMonster, m_movementGoal, FIELD_INTEGER ),
-		//	DEFINE_FIELD( CBaseMonster, m_iRouteIndex, FIELD_INTEGER ),
-		//	DEFINE_FIELD( CBaseMonster, m_moveWaitTime, FIELD_FLOAT ),
 
 		DEFINE_FIELD(CBaseMonster, m_vecMoveGoal, FIELD_POSITION_VECTOR),
 		DEFINE_FIELD(CBaseMonster, m_movementActivity, FIELD_INTEGER),
 
-		//		int					m_iAudibleList; // first index of a linked list of sounds that the monster can hear.
-		//	DEFINE_FIELD( CBaseMonster, m_afSoundTypes, FIELD_INTEGER ),
 		DEFINE_FIELD(CBaseMonster, m_vecLastPosition, FIELD_POSITION_VECTOR),
 		DEFINE_FIELD(CBaseMonster, m_iHintNode, FIELD_INTEGER),
 		DEFINE_FIELD(CBaseMonster, m_afMemory, FIELD_INTEGER),
@@ -112,7 +104,7 @@ bool CBaseMonster::Save(CSave& save)
 {
 	if (!CBaseToggle::Save(save))
 		return false;
-	if (pev->targetname)
+	if (!FStringNull(pev->targetname))
 		return save.WriteFields(STRING(pev->targetname), "CBaseMonster", this, m_SaveData, ARRAYSIZE(m_SaveData));
 	else
 		return save.WriteFields(STRING(pev->classname), "CBaseMonster", this, m_SaveData, ARRAYSIZE(m_SaveData));
@@ -229,11 +221,8 @@ void CBaseMonster::Listen()
 		if (nullptr != pCurrentSound &&
 			(pCurrentSound->m_iType & iMySounds) != 0 &&
 			(pCurrentSound->m_vecOrigin - EarPosition()).Length() <= pCurrentSound->m_iVolume * hearingSensitivity)
-
-		//if ( ( g_pSoundEnt->m_SoundPool[ iSound ].m_iType & iMySounds ) && ( g_pSoundEnt->m_SoundPool[ iSound ].m_vecOrigin - EarPosition()).Length () <= g_pSoundEnt->m_SoundPool[ iSound ].m_iVolume * hearingSensitivity )
 		{
 			// the monster cares about this sound, and it's close enough to hear.
-			//g_pSoundEnt->m_SoundPool[ iSound ].m_iNextAudible = m_iAudibleList;
 			pCurrentSound->m_iNextAudible = m_iAudibleList;
 
 			if (pCurrentSound->FIsSound())
@@ -244,7 +233,6 @@ void CBaseMonster::Listen()
 			else
 			{
 				// if not a sound, must be a smell - determine if it's just a scent, or if it's a food scent
-				//				if ( g_pSoundEnt->m_SoundPool[ iSound ].m_iType & ( bits_SOUND_MEAT | bits_SOUND_CARCASS ) )
 				if ((pCurrentSound->m_iType & (bits_SOUND_MEAT | bits_SOUND_CARCASS)) != 0)
 				{
 					// the detected scent is a food item, so set both conditions.
@@ -259,13 +247,11 @@ void CBaseMonster::Listen()
 				}
 			}
 
-			//			m_afSoundTypes |= g_pSoundEnt->m_SoundPool[ iSound ].m_iType;
 			m_afSoundTypes |= pCurrentSound->m_iType;
 
 			m_iAudibleList = iSound;
 		}
 
-		//		iSound = g_pSoundEnt->m_SoundPool[ iSound ].m_iNext;
 		iSound = pCurrentSound->m_iNext;
 	}
 }
@@ -2138,13 +2124,13 @@ int CBaseMonster::IRelationship(CBaseEntity* pTarget)
 
 	int iTargClass = pTarget->Classify();
 
-	if (iTargClass == CLASS_PLAYER && m_iPlayerReact) //LRC
+	if (iTargClass == CLASS_PLAYER && m_iPlayerReact != 0) //LRC
 	{
 		if (m_iPlayerReact == 1) // Ignore player
 			return R_NO;
 		else if (m_iPlayerReact == 4)
 			return R_HT;
-		else if (m_afMemory & bits_MEMORY_PROVOKED)
+		else if (FBitSet(m_afMemory, bits_MEMORY_PROVOKED))
 			return R_HT;
 		else
 			return R_NO;
@@ -2589,12 +2575,12 @@ void CBaseMonster::HandleAnimEvent(MonsterEvent_t* pEvent)
 		break;
 
 	case SCRIPT_EVENT_SOUND: // Play a named wave file
-		if (!(pev->spawnflags & SF_MONSTER_GAG) || m_MonsterState != MONSTERSTATE_IDLE)
+		if (!FBitSet(pev->spawnflags, SF_MONSTER_GAG) || m_MonsterState != MONSTERSTATE_IDLE)
 			EMIT_SOUND(edict(), CHAN_BODY, pEvent->options, 1.0, ATTN_IDLE);
 		break;
 
 	case SCRIPT_EVENT_SOUND_VOICE:
-		if (!(pev->spawnflags & SF_MONSTER_GAG) || m_MonsterState != MONSTERSTATE_IDLE)
+		if (!FBitSet(pev->spawnflags, SF_MONSTER_GAG) || m_MonsterState != MONSTERSTATE_IDLE)
 			EMIT_SOUND(edict(), CHAN_VOICE, pEvent->options, 1.0, ATTN_IDLE);
 		break;
 
@@ -3036,7 +3022,7 @@ bool CBaseMonster::CanPlaySequence(int interruptFlags)
 {
 	if (m_pCine)
 	{
-		if (interruptFlags & SS_INTERRUPT_SCRIPTS)
+		if (FBitSet(interruptFlags, SS_INTERRUPT_SCRIPTS))
 		{
 			return true;
 		}
@@ -3057,7 +3043,7 @@ bool CBaseMonster::CanPlaySequence(int interruptFlags)
 		return false;
 	}
 
-	if (interruptFlags & SS_INTERRUPT_ANYSTATE)
+	if (FBitSet(interruptFlags, SS_INTERRUPT_ANYSTATE))
 	{
 		// ok to go, no matter what the monster state. (scripted AI)
 		return true;
@@ -3069,7 +3055,7 @@ bool CBaseMonster::CanPlaySequence(int interruptFlags)
 		return true;
 	}
 
-	if (m_MonsterState == MONSTERSTATE_ALERT && interruptFlags & SS_INTERRUPT_ALERT)
+	if (m_MonsterState == MONSTERSTATE_ALERT && FBitSet(interruptFlags, SS_INTERRUPT_ALERT))
 		return true;
 
 		// unknown situation
@@ -3432,14 +3418,14 @@ public:
 	int Classify() override { return pev->frags; };
 	STATE GetState() override
 	{
-		return pev->health ? STATE_ON : STATE_OFF;
+		return pev->health != 0 ? STATE_ON : STATE_OFF;
 	};
 };
 LINK_ENTITY_TO_CLASS(monster_target, CMonsterTarget);
 
 void CMonsterTarget::Spawn()
 {
-	if (pev->spawnflags & SF_MONSTERTARGET_OFF)
+	if (FBitSet(pev->spawnflags, SF_MONSTERTARGET_OFF))
 		pev->health = 0;
 	else
 		pev->health = 1; // Don't ignore me, I'm not dead. I'm quite well really. I think I'll go for a walk...
@@ -3450,7 +3436,7 @@ void CMonsterTarget::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE
 {
 	if (ShouldToggle(useType))
 	{
-		if (pev->health)
+		if (pev->health != 0)
 			pev->health = 0;
 		else
 			pev->health = 1;

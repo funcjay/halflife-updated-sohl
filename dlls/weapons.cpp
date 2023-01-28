@@ -1413,14 +1413,7 @@ void CBasePlayerWeapon::PrintState()
 {
 	ALERT(at_debug, "primary:  %f\n", m_flNextPrimaryAttack);
 	ALERT(at_debug, "idle   :  %f\n", m_flTimeWeaponIdle);
-
-	//	ALERT( at_debug, "nextrl :  %f\n", m_flNextReload );
-	//	ALERT( at_debug, "nextpum:  %f\n", m_flPumpTime );
-
-	//	ALERT( at_debug, "m_frt  :  %f\n", m_fReloadTime );
 	ALERT(at_debug, "m_finre:  %i\n", static_cast<int>(m_fInReload));
-	//	ALERT( at_debug, "m_finsr:  %i\n", m_fInSpecialReload );
-
 	ALERT(at_debug, "m_iclip:  %i\n", m_iClip);
 }
 
@@ -1444,7 +1437,6 @@ TYPEDESCRIPTION CShotgun::m_SaveData[] =
 		DEFINE_FIELD(CShotgun, m_flNextReload, FIELD_TIME),
 		DEFINE_FIELD(CShotgun, m_fInSpecialReload, FIELD_INTEGER),
 		DEFINE_FIELD(CShotgun, m_flNextReload, FIELD_TIME),
-		// DEFINE_FIELD( CShotgun, m_iShell, FIELD_INTEGER ),
 		DEFINE_FIELD(CShotgun, m_flPumpTime, FIELD_TIME),
 };
 IMPLEMENT_SAVERESTORE(CShotgun, CBasePlayerWeapon);
@@ -1452,18 +1444,12 @@ IMPLEMENT_SAVERESTORE(CShotgun, CBasePlayerWeapon);
 TYPEDESCRIPTION CGauss::m_SaveData[] =
 	{
 		DEFINE_FIELD(CGauss, m_fInAttack, FIELD_INTEGER),
-		//	DEFINE_FIELD( CGauss, m_flStartCharge, FIELD_TIME ),
-		//	DEFINE_FIELD( CGauss, m_flPlayAftershock, FIELD_TIME ),
-		//	DEFINE_FIELD( CGauss, m_flNextAmmoBurn, FIELD_TIME ),
 		DEFINE_FIELD(CGauss, m_fPrimaryFire, FIELD_BOOLEAN),
 };
 IMPLEMENT_SAVERESTORE(CGauss, CBasePlayerWeapon);
 
 TYPEDESCRIPTION CEgon::m_SaveData[] =
 	{
-		//	DEFINE_FIELD( CEgon, m_pBeam, FIELD_CLASSPTR ),
-		//	DEFINE_FIELD( CEgon, m_pNoise, FIELD_CLASSPTR ),
-		//	DEFINE_FIELD( CEgon, m_pSprite, FIELD_CLASSPTR ),
 		DEFINE_FIELD(CEgon, m_shootTime, FIELD_TIME),
 		DEFINE_FIELD(CEgon, m_fireState, FIELD_INTEGER),
 		DEFINE_FIELD(CEgon, m_fireMode, FIELD_INTEGER),

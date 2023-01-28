@@ -75,7 +75,7 @@ public:
 	// Functions to verify the single/multiplayer status of a game
 	virtual bool IsMultiplayer() = 0;							   // is this a multiplayer game? (either coop or deathmatch)
 	virtual bool IsDeathmatch() = 0;							   //is this a deathmatch game?
-	virtual bool IsTeamplay() { return false; };				   // is this deathmatch game being played with team rules?
+	virtual bool IsTeamplay() { return false; }					   // is this deathmatch game being played with team rules?
 	virtual bool IsCoOp() = 0;									   // is this a coop game?
 	virtual const char* GetGameDescription() { return GAME_NAME; } // this is the game name that gets seen in the server browser
 
@@ -252,7 +252,7 @@ public:
 	bool FAllowMonsters() override;
 
 	// Teamplay stuff
-	const char* GetTeamID(CBaseEntity* pEntity) override { return ""; };
+	const char* GetTeamID(CBaseEntity* pEntity) override { return ""; }
 	int PlayerRelationship(CBaseEntity* pPlayer, CBaseEntity* pTarget) override;
 };
 

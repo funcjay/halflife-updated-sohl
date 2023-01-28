@@ -105,7 +105,7 @@ bool CHud::Redraw(float flTime, bool intermission)
 	static float m_flShotTime = 0;
 
 	//LRC - handle fog fading effects. (is this the right place for it?)
-	if (g_fFadeDuration)
+	if (g_fFadeDuration != 0)
 	{
 		// Nicer might be to use some kind of logarithmic fade-in?
 		double fFraction = m_flTimeDelta / g_fFadeDuration;

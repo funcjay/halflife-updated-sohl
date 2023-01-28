@@ -224,7 +224,7 @@ STATE CRecharge::GetState()
 {
 	if (m_iOn == 2)
 		return STATE_IN_USE;
-	else if (m_iJuice)
+	else if (m_iJuice <= 0)
 		return STATE_ON;
 	else
 		return STATE_OFF;

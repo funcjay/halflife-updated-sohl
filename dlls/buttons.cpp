@@ -171,7 +171,7 @@ public:
 
 void CEnvState::Spawn()
 {
-	if (pev->spawnflags & SF_ENVSTATE_START_ON)
+	if (FBitSet(pev->spawnflags, SF_ENVSTATE_START_ON))
 		m_iState = STATE_ON;
 	else
 		m_iState = STATE_OFF;
@@ -213,7 +213,7 @@ void CEnvState::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useT
 {
 	if (!ShouldToggle(useType) || IsLockedByMaster())
 	{
-		if (pev->spawnflags & SF_ENVSTATE_DEBUG)
+		if (FBitSet(pev->spawnflags, SF_ENVSTATE_DEBUG))
 		{
 			ALERT(at_debug, "DEBUG: env_state \"%s\" ", STRING(pev->targetname));
 			if (IsLockedByMaster())
@@ -232,10 +232,10 @@ void CEnvState::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useT
 	{
 	case STATE_ON:
 	case STATE_TURN_ON:
-		if (m_fTurnOffTime)
+		if (m_fTurnOffTime != 0)
 		{
 			m_iState = STATE_TURN_OFF;
-			if (pev->spawnflags & SF_ENVSTATE_DEBUG)
+			if (FBitSet(pev->spawnflags, SF_ENVSTATE_DEBUG))
 			{
 				ALERT(at_debug, "DEBUG: env_state \"%s\" triggered; will turn off in %f seconds.\n", STRING(pev->targetname), m_fTurnOffTime);
 			}
@@ -244,16 +244,16 @@ void CEnvState::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useT
 		else
 		{
 			m_iState = STATE_OFF;
-			if (pev->spawnflags & SF_ENVSTATE_DEBUG)
+			if (FBitSet(pev->spawnflags, SF_ENVSTATE_DEBUG))
 			{
 				ALERT(at_debug, "DEBUG: env_state \"%s\" triggered, turned off", STRING(pev->targetname));
-				if (pev->target)
+				if (!FStringNull(pev->target))
 				{
 					ALERT(at_debug, ": firing \"%s\"", STRING(pev->target));
-					if (pev->noise2)
+					if (!FStringNull(pev->noise2))
 						ALERT(at_debug, " and \"%s\"", STRING(pev->noise2));
 				}
-				else if (pev->noise2)
+				else if (!FStringNull(pev->noise2))
 					ALERT(at_debug, ": firing \"%s\"", STRING(pev->noise2));
 				ALERT(at_debug, ".\n");
 			}
@@ -264,10 +264,10 @@ void CEnvState::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useT
 		break;
 	case STATE_OFF:
 	case STATE_TURN_OFF:
-		if (m_fTurnOnTime)
+		if (m_fTurnOnTime != 0)
 		{
 			m_iState = STATE_TURN_ON;
-			if (pev->spawnflags & SF_ENVSTATE_DEBUG)
+			if (FBitSet(pev->spawnflags, SF_ENVSTATE_DEBUG))
 			{
 				ALERT(at_debug, "DEBUG: env_state \"%s\" triggered; will turn on in %f seconds.\n", STRING(pev->targetname), m_fTurnOnTime);
 			}
@@ -276,16 +276,16 @@ void CEnvState::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useT
 		else
 		{
 			m_iState = STATE_ON;
-			if (pev->spawnflags & SF_ENVSTATE_DEBUG)
+			if (FBitSet(pev->spawnflags, SF_ENVSTATE_DEBUG))
 			{
 				ALERT(at_debug, "DEBUG: env_state \"%s\" triggered, turned on", STRING(pev->targetname));
-				if (pev->target)
+				if (!FStringNull(pev->target))
 				{
 					ALERT(at_debug, ": firing \"%s\"", STRING(pev->target));
-					if (pev->noise1)
+					if (!FStringNull(pev->noise1))
 						ALERT(at_debug, " and \"%s\"", STRING(pev->noise1));
 				}
-				else if (pev->noise1)
+				else if (!FStringNull(pev->noise1))
 					ALERT(at_debug, ": firing \"%s\"", STRING(pev->noise1));
 				ALERT(at_debug, ".\n");
 			}
@@ -302,16 +302,16 @@ void CEnvState::Think()
 	if (m_iState == STATE_TURN_ON)
 	{
 		m_iState = STATE_ON;
-		if (pev->spawnflags & SF_ENVSTATE_DEBUG)
+		if (FBitSet(pev->spawnflags, SF_ENVSTATE_DEBUG))
 		{
 			ALERT(at_debug, "DEBUG: env_state \"%s\" turned itself on", STRING(pev->targetname));
-			if (pev->target)
+			if (!FStringNull(pev->target))
 			{
 				ALERT(at_debug, ": firing %s", STRING(pev->target));
-				if (pev->noise1)
+				if (!FStringNull(pev->noise1))
 					ALERT(at_debug, " and %s", STRING(pev->noise1));
 			}
-			else if (pev->noise1)
+			else if (!FStringNull(pev->noise1))
 				ALERT(at_debug, ": firing %s", STRING(pev->noise1));
 			ALERT(at_debug, ".\n");
 		}
@@ -321,14 +321,14 @@ void CEnvState::Think()
 	else if (m_iState == STATE_TURN_OFF)
 	{
 		m_iState = STATE_OFF;
-		if (pev->spawnflags & SF_ENVSTATE_DEBUG)
+		if (FBitSet(pev->spawnflags, SF_ENVSTATE_DEBUG))
 		{
 			ALERT(at_debug, "DEBUG: env_state \"%s\" turned itself off", STRING(pev->targetname));
-			if (pev->target)
+			if (!FStringNull(pev->target))
 				ALERT(at_debug, ": firing %s", STRING(pev->target));
-			if (pev->noise2)
+			if (!FStringNull(pev->noise2))
 				ALERT(at_debug, " and %s", STRING(pev->noise2));
-			else if (pev->noise2)
+			else if (!FStringNull(pev->noise2))
 				ALERT(at_debug, ": firing %s", STRING(pev->noise2));
 			ALERT(at_debug, ".\n");
 		}
@@ -402,7 +402,7 @@ void CMultiSource::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE u
 	// if we didn't find it, report error and leave
 	if (i > m_iTotal)
 	{
-		if (pCaller->pev->targetname)
+		if (!FStringNull(pCaller->pev->targetname))
 			ALERT(at_debug, "multisource \"%s\": Used by non-member %s \"%s\"\n", STRING(pev->targetname), STRING(pCaller->pev->classname), STRING(pCaller->pev->targetname));
 		else
 			ALERT(at_debug, "multisource \"%s\": Used by non-member %s\n", STRING(pev->targetname), STRING(pCaller->pev->classname));
@@ -417,6 +417,9 @@ void CMultiSource::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE u
 	// store the state before the change, so we can compare it to the new state
 	STATE s = GetState();
 
+	if (i == 0)
+		i = 1;
+
 	// do the change
 	m_rgTriggered[i - 1] ^= 1;
 
@@ -424,11 +427,11 @@ void CMultiSource::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE u
 	if (s == GetState())
 		return;
 
-	if (s == STATE_ON && pev->netname)
+	if (s == STATE_ON && !FStringNull(pev->netname))
 	{
 		// the change disabled me and I have a "fire on disable" field
 		ALERT(at_aiconsole, "Multisource %s deactivated (%d inputs)\n", STRING(pev->targetname), m_iTotal);
-		if (m_globalstate)
+		if (!FStringNull(m_globalstate))
 			FireTargets(STRING(pev->netname), NULL, this, USE_OFF, 0);
 		else
 			FireTargets(STRING(pev->netname), NULL, this, USE_TOGGLE, 0);
@@ -515,8 +518,8 @@ void CMultiSource::Register()
 int CBaseButton::ObjectCaps()
 {
 	return (CBaseToggle::ObjectCaps() & ~FCAP_ACROSS_TRANSITION) |
-		   (pev->takedamage ? 0 : FCAP_IMPULSE_USE) |
-		   (pev->spawnflags & SF_BUTTON_ONLYDIRECT ? FCAP_ONLYDIRECT_USE : 0);
+		   (pev->takedamage != DAMAGE_NO ? 0 : FCAP_IMPULSE_USE) |
+		   (FBitSet(pev->spawnflags, SF_BUTTON_ONLYDIRECT) ? FCAP_ONLYDIRECT_USE : 0);
 }
 
 // CBaseButton
@@ -531,7 +534,6 @@ TYPEDESCRIPTION CBaseButton::m_SaveData[] =
 		DEFINE_FIELD(CBaseButton, m_bUnlockedSound, FIELD_CHARACTER),
 		DEFINE_FIELD(CBaseButton, m_bUnlockedSentence, FIELD_CHARACTER),
 		DEFINE_FIELD(CBaseButton, m_strChangeTarget, FIELD_STRING),
-		//	DEFINE_FIELD( CBaseButton, m_ls, FIELD_??? ),   // This is restored in Precache()
 };
 
 
@@ -788,7 +790,7 @@ void CBaseButton::Spawn()
 
 
 	// Is this a non-moving button?
-	if (((m_vecPosition2 - m_vecPosition1).Length() < 1) || (pev->spawnflags & SF_BUTTON_DONTMOVE))
+	if (((m_vecPosition2 - m_vecPosition1).Length() < 1) || FBitSet(pev->spawnflags, SF_BUTTON_DONTMOVE))
 		m_vecPosition2 = m_vecPosition1;
 
 	m_fStayPushed = (m_flWait == -1 ? true : false);
@@ -1068,7 +1070,7 @@ void CBaseButton::ButtonActivate()
 	//LRC - unhelpfully, SF_BUTTON_DONTMOVE is the same value as
 	// SF_ROTBUTTON_NOTSOLID, so we have to assume that a rotbutton will
 	// never be DONTMOVE.
-	if (pev->spawnflags & SF_BUTTON_DONTMOVE && !m_fRotating)
+	if (FBitSet(pev->spawnflags, SF_BUTTON_DONTMOVE) && !m_fRotating)
 	{
 		TriggerAndWait();
 	}
@@ -1118,7 +1120,7 @@ void CBaseButton::TriggerAndWait()
 	else
 	{
 		SetThink(&CBaseButton::ButtonReturn);
-		if (m_flWait)
+		if (m_flWait != 0)
 		{
 			SetNextThink(m_flWait);
 		}
@@ -1146,7 +1148,7 @@ void CBaseButton::ButtonReturn()
 	else if (m_iStyle <= -32)
 		LIGHT_STYLE(-m_iStyle, "a");
 
-	if (pev->spawnflags & SF_BUTTON_DONTMOVE)
+	if (FBitSet(pev->spawnflags, SF_BUTTON_DONTMOVE))
 	{
 		ButtonBackHome();
 	}
@@ -1689,7 +1691,7 @@ void EXPORT CEnvSpark::SparkWait()
 void EXPORT CEnvSpark::SparkThink()
 {
 	DoSpark(pev, pev->origin);
-	if (pev->spawnflags & 16)
+	if (FBitSet(pev->spawnflags, 16))
 	{
 		SetThink(NULL);
 	}

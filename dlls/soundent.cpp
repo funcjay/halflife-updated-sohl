@@ -147,7 +147,6 @@ void CSoundEnt::FreeSound(int iSound, int iPrevious)
 	{
 		// iSound is not the head of the active list, so
 		// must fix the index for the Previous sound
-		//		pSoundEnt->m_SoundPool[ iPrevious ].m_iNext = m_SoundPool[ iSound ].m_iNext;
 		pSoundEnt->m_SoundPool[iPrevious].m_iNext = pSoundEnt->m_SoundPool[iSound].m_iNext;
 	}
 	else

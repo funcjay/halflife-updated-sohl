@@ -137,7 +137,7 @@ edict_t* CGameRules::GetPlayerSpawnSpot(CBasePlayer* pPlayer)
 	pPlayer->pev->fixangle = 1;
 
 	//LRC
-	if (pentSpawnSpot->v.spawnflags & 1) // the START WITH SUIT flag
+	if (FBitSet(pentSpawnSpot->v.spawnflags, 1)) // the START WITH SUIT flag
 	{
 		g_startSuit = true;
 	}

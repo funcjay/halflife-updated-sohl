@@ -31,7 +31,7 @@ class CRat : public CBaseMonster
 public:
 	void Spawn() override;
 	void Precache() override;
-	void SetYawSpeed() override;
+	void SetYawSpeed() override { pev->yaw_speed = 45; }
 	int Classify() override;
 };
 LINK_ENTITY_TO_CLASS(monster_rat, CRat);
@@ -42,26 +42,7 @@ LINK_ENTITY_TO_CLASS(monster_rat, CRat);
 //=========================================================
 int CRat::Classify()
 {
-	return m_iClass ? m_iClass : CLASS_INSECT; //LRC- maybe someone needs to give them a basic biology lesson...
-}
-
-//=========================================================
-// SetYawSpeed - allows each sequence to have a different
-// turn rate associated with it.
-//=========================================================
-void CRat::SetYawSpeed()
-{
-	int ys;
-
-	switch (m_Activity)
-	{
-	case ACT_IDLE:
-	default:
-		ys = 45;
-		break;
-	}
-
-	pev->yaw_speed = ys;
+	return m_iClass != 0 ? m_iClass : CLASS_INSECT; //LRC- maybe someone needs to give them a basic biology lesson...
 }
 
 //=========================================================
@@ -71,8 +52,8 @@ void CRat::Spawn()
 {
 	Precache();
 
-	if (pev->model)
-		SET_MODEL(ENT(pev), STRING(pev->model)); //LRC
+	if (!FStringNull(pev->model))
+		SET_MODEL(ENT(pev), (char*)STRING(pev->model)); //LRC
 	else
 		SET_MODEL(ENT(pev), "models/bigrat.mdl");
 	UTIL_SetSize(pev, Vector(0, 0, 0), Vector(0, 0, 0));
@@ -93,7 +74,7 @@ void CRat::Spawn()
 //=========================================================
 void CRat::Precache()
 {
-	if (pev->model)
+	if (!FStringNull(pev->model))
 		PRECACHE_MODEL((char*)STRING(pev->model)); //LRC
 	else
 		PRECACHE_MODEL("models/bigrat.mdl");

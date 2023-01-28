@@ -537,7 +537,7 @@ bool CHudAmmo::MsgFunc_HideWeapon(const char* pszName, int iSize, void* pbuf)
 		return true;
 
 	//LRCT - experiment to allow a custom crosshair.
-	if (gHUD.m_iHideHUDDisplay & HIDEHUD_CUSTOMCROSSHAIR)
+	if ((gHUD.m_iHideHUDDisplay & HIDEHUD_CUSTOMCROSSHAIR) != 0)
 	{
 		WEAPON* pWeapon = gWR.GetWeapon(4);
 		if (pWeapon)
@@ -619,12 +619,12 @@ bool CHudAmmo::MsgFunc_CurWeapon(const char* pszName, int iSize, void* pbuf)
 	m_pWeapon = pWeapon;
 
 	//LRCT - probably not the right way to do this...
-	if (gHUD.m_iHideHUDDisplay & (HIDEHUD_CUSTOMCROSSHAIR))
+	if ((gHUD.m_iHideHUDDisplay & HIDEHUD_CUSTOMCROSSHAIR) != 0)
 	{
 		WEAPON* ccWeapon = gWR.GetWeapon(7);
 		SetCrosshair(ccWeapon->hCrosshair, ccWeapon->rcCrosshair, 255, 255, 255);
 	}
-	else if (!(gHUD.m_iHideHUDDisplay & (HIDEHUD_WEAPONS | HIDEHUD_ALL)))
+	else if ((gHUD.m_iHideHUDDisplay & (HIDEHUD_WEAPONS | HIDEHUD_ALL)) == 0)
 	{
 		if (gHUD.m_iFOV >= 90)
 		{ // normal crosshairs

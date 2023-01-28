@@ -76,12 +76,6 @@ public:
 	virtual void EXPORT SpinDownCall() { m_iSpin = false; }
 	virtual void EXPORT SpinUpCall() { m_iSpin = true; }
 
-	// void SpinDown();
-	// float EXPORT SpinDownCall() { return SpinDown(); }
-
-	// virtual float SpinDown() { return 0;}
-	// virtual float Retire() { return 0;}
-
 	void EXPORT Deploy();
 	void EXPORT Retire();
 
@@ -277,7 +271,6 @@ void CBaseTurret::Spawn()
 	SetBoneController(0, 0);
 	SetBoneController(1, 0);
 	m_flFieldOfView = VIEW_FIELD_FULL;
-	// m_flSightRange = TURRET_RANGE;
 }
 
 
@@ -289,7 +282,6 @@ void CBaseTurret::Precache()
 	PRECACHE_SOUND("turret/tu_die.wav");
 	PRECACHE_SOUND("turret/tu_die2.wav");
 	PRECACHE_SOUND("turret/tu_die3.wav");
-	// PRECACHE_SOUND ("turret/tu_retract.wav"); // just use deploy sound to save memory
 	PRECACHE_SOUND("turret/tu_deploy.wav");
 	PRECACHE_SOUND("turret/tu_spinup.wav");
 	PRECACHE_SOUND("turret/tu_spindown.wav");
@@ -302,11 +294,11 @@ void CBaseTurret::Precache()
 void CTurret::Spawn()
 {
 	Precache();
-	if (pev->model)
-		SET_MODEL(ENT(pev), STRING(pev->model)); //LRC
+	if (!FStringNull(pev->model))
+		SET_MODEL(ENT(pev), (char*)STRING(pev->model)); //LRC
 	else
 		SET_MODEL(ENT(pev), "models/turret.mdl");
-	if (!pev->health)
+	if (pev->health == 0)
 		pev->health = gSkillData.turretHealth;
 	m_HackedGunPos = Vector(0, 0, 12.75);
 	m_flMaxSpin = TURRET_MAXSPIN;
@@ -332,7 +324,7 @@ void CTurret::Spawn()
 void CTurret::Precache()
 {
 	CBaseTurret::Precache();
-	if (pev->model)
+	if (!FStringNull(pev->model))
 		PRECACHE_MODEL((char*)STRING(pev->model)); //LRC
 	else
 		PRECACHE_MODEL("models/turret.mdl");
@@ -342,11 +334,11 @@ void CTurret::Precache()
 void CMiniTurret::Spawn()
 {
 	Precache();
-	if (pev->model)
+	if (!FStringNull(pev->model))
 		SET_MODEL(ENT(pev), STRING(pev->model)); //LRC
 	else
 		SET_MODEL(ENT(pev), "models/miniturret.mdl");
-	if (!pev->health)
+	if (pev->health == 0)
 		pev->health = gSkillData.miniturretHealth;
 	m_HackedGunPos = Vector(0, 0, 12.75);
 	m_flMaxSpin = 0;
@@ -366,7 +358,7 @@ void CMiniTurret::Spawn()
 void CMiniTurret::Precache()
 {
 	CBaseTurret::Precache();
-	if (pev->model)
+	if (!FStringNull(pev->model))
 		PRECACHE_MODEL((char*)STRING(pev->model)); //LRC
 	else
 		PRECACHE_MODEL("models/miniturret.mdl");
@@ -1063,7 +1055,7 @@ bool CBaseTurret::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 
 	if (pev->health <= 10)
 	{
-		if (m_iOn && (true || RANDOM_LONG(0, 0x7FFF) > 800))
+		if (m_iOn)
 		{
 			m_fBeserk = true;
 			SetThink(&CBaseTurret::SearchThink);
@@ -1139,7 +1131,6 @@ bool CBaseTurret::MoveTurret()
 		if (flDist < (0.05 * m_iBaseTurnRate))
 			m_vecCurAngles.y = m_vecGoalAngles.y;
 
-		//ALERT(at_console, "%.2f -> %.2f\n", m_vecCurAngles.y, y);
 		if (m_iOrientation == 0)
 			SetBoneController(0, m_vecCurAngles.y - pev->angles.y);
 		else
@@ -1150,8 +1141,6 @@ bool CBaseTurret::MoveTurret()
 	if (!state)
 		m_fTurnRate = m_iBaseTurnRate;
 
-	//ALERT(at_console, "(%.2f, %.2f)->(%.2f, %.2f)\n", m_vecCurAngles.x,
-	//	m_vecCurAngles.y, m_vecGoalAngles.x, m_vecGoalAngles.y);
 	return state;
 }
 
@@ -1160,7 +1149,7 @@ bool CBaseTurret::MoveTurret()
 //
 int CBaseTurret::Classify()
 {
-	if (m_iClass)
+	if (m_iClass != 0)
 		return m_iClass;
 	if (m_iOn || m_iAutoStart)
 		return CLASS_MACHINE;
@@ -1190,7 +1179,7 @@ LINK_ENTITY_TO_CLASS(monster_sentry, CSentry);
 void CSentry::Precache()
 {
 	CBaseTurret::Precache();
-	if (pev->model)
+	if (!FStringNull(pev->model))
 		PRECACHE_MODEL((char*)STRING(pev->model)); //LRC
 	else
 		PRECACHE_MODEL("models/sentry.mdl");
@@ -1199,11 +1188,11 @@ void CSentry::Precache()
 void CSentry::Spawn()
 {
 	Precache();
-	if (pev->model)
-		SET_MODEL(ENT(pev), STRING(pev->model)); //LRC
+	if (!FStringNull(pev->model))
+		SET_MODEL(ENT(pev), (char*)STRING(pev->model)); //LRC
 	else
 		SET_MODEL(ENT(pev), "models/sentry.mdl");
-	if (!pev->health) //LRC
+	if (pev->health == 0) //LRC
 		pev->health = gSkillData.sentryHealth;
 	m_HackedGunPos = Vector(0, 0, 48);
 	pev->view_ofs.z = 48;

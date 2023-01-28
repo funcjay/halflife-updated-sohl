@@ -868,7 +868,7 @@ void CBaseMonster::StartTask(Task_t* pTask)
 	{
 		Activity newActivity;
 
-		if (!m_pGoalEnt || (m_pGoalEnt->pev->origin - pev->origin).Length() < 1)
+		if (FNullEnt(m_pGoalEnt) || (m_pGoalEnt->pev->origin - pev->origin).Length() < 1)
 			TaskComplete();
 		else
 		{

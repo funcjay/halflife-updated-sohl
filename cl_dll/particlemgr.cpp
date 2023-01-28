@@ -11,13 +11,13 @@
 
 ParticleSystemManager* g_pParticleSystems = NULL;
 
-ParticleSystemManager::ParticleSystemManager(void)
+ParticleSystemManager::ParticleSystemManager()
 {
 	m_pFirstSystem = NULL;
 	//systemio = NULL;
 }
 
-ParticleSystemManager::~ParticleSystemManager(void)
+ParticleSystemManager::~ParticleSystemManager()
 {
 	ClearSystems();
 }
@@ -148,7 +148,7 @@ void ParticleSystemManager::UpdateSystems(float frametime) //LRC - now with adde
 	gEngfuncs.pTriAPI->RenderMode(kRenderNormal);
 }
 
-void ParticleSystemManager::ClearSystems(void)
+void ParticleSystemManager::ClearSystems()
 {
 	ParticleSystem* pSystem = m_pFirstSystem;
 	ParticleSystem* pTemp;

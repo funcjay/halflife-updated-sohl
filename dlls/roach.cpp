@@ -39,7 +39,7 @@ class CRoach : public CBaseMonster
 public:
 	void Spawn() override;
 	void Precache() override;
-	void SetYawSpeed() override;
+	void SetYawSpeed() override { pev->yaw_speed = 120; }
 	void EXPORT MonsterThink() override;
 	void Move(float flInterval) override;
 	void PickNewDest(int iCondition);
@@ -75,7 +75,7 @@ int CRoach::ISoundMask()
 //=========================================================
 int CRoach::Classify()
 {
-	return m_iClass ? m_iClass : CLASS_INSECT;
+	return m_iClass != 0 ? m_iClass : CLASS_INSECT;
 }
 
 //=========================================================
@@ -101,27 +101,14 @@ void CRoach::Touch(CBaseEntity* pOther)
 }
 
 //=========================================================
-// SetYawSpeed - allows each sequence to have a different
-// turn rate associated with it.
-//=========================================================
-void CRoach::SetYawSpeed()
-{
-	int ys;
-
-	ys = 120;
-
-	pev->yaw_speed = ys;
-}
-
-//=========================================================
 // Spawn
 //=========================================================
 void CRoach::Spawn()
 {
 	Precache();
 
-	if (pev->model)
-		SET_MODEL(ENT(pev), STRING(pev->model)); //LRC
+	if (!FStringNull(pev->model))
+		SET_MODEL(ENT(pev), (char*)STRING(pev->model)); //LRC
 	else
 		SET_MODEL(ENT(pev), "models/roach.mdl");
 	UTIL_SetSize(pev, Vector(-1, -1, 0), Vector(1, 1, 2));
@@ -150,7 +137,7 @@ void CRoach::Spawn()
 //=========================================================
 void CRoach::Precache()
 {
-	if (pev->model)
+	if (!FStringNull(pev->model))
 		PRECACHE_MODEL((char*)STRING(pev->model)); //LRC
 	else
 		PRECACHE_MODEL("models/roach.mdl");
@@ -226,7 +213,6 @@ void CRoach::MonsterThink()
 			if (HasConditions(bits_COND_SEE_FEAR))
 			{
 				// if see something scary
-				//ALERT ( at_aiconsole, "Scared\n" );
 				Eat(30 + (RANDOM_LONG(0, 14))); // roach will ignore food for 30 to 45 seconds
 				PickNewDest(ROACH_SCARED_BY_ENT);
 				SetActivity(ACT_WALK);
@@ -234,7 +220,6 @@ void CRoach::MonsterThink()
 			else if (RANDOM_LONG(0, 149) == 1)
 			{
 				// if roach doesn't see anything, there's still a chance that it will move. (boredom)
-				//ALERT ( at_aiconsole, "Bored\n" );
 				PickNewDest(ROACH_BORED);
 				SetActivity(ACT_WALK);
 
@@ -257,7 +242,6 @@ void CRoach::MonsterThink()
 			if (GETENTITYILLUM(ENT(pev)) > m_flLastLightLevel)
 			{
 				// someone turned on lights!
-				//ALERT ( at_console, "Lights!\n" );
 				PickNewDest(ROACH_SCARED_BY_LIGHT);
 				SetActivity(ACT_WALK);
 			}
@@ -433,7 +417,7 @@ void CRoach::Look(int iDistance)
 		// only consider ents that can be damaged. !!!temporarily only considering other monsters and clients
 		if (pSightEnt->IsPlayer() || FBitSet(pSightEnt->pev->flags, FL_MONSTER))
 		{
-			if (/*FVisible( pSightEnt ) &&*/ !FBitSet(pSightEnt->pev->flags, FL_NOTARGET) && pSightEnt->pev->health > 0)
+			if (!FBitSet(pSightEnt->pev->flags, FL_NOTARGET) && pSightEnt->pev->health > 0)
 			{
 				// NULL the Link pointer for each ent added to the link list. If other ents follow, the will overwrite
 				// this value. If this ent happens to be the last, the list will be properly terminated.

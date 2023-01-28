@@ -100,7 +100,7 @@ int __MsgFunc_Logo(const char* pszName, int iSize, void* pbuf)
 //LRC
 int __MsgFunc_HUDColor(const char* pszName, int iSize, void* pbuf)
 {
-	return gHUD.MsgFunc_HUDColor(pszName, iSize, pbuf);
+	return static_cast<int>(gHUD.MsgFunc_HUDColor(pszName, iSize, pbuf));
 }
 
 //LRC
@@ -592,7 +592,7 @@ bool CHud::MsgFunc_HUDColor(const char* pszName, int iSize, void* pbuf)
 
 	m_iHUDColor = READ_LONG();
 
-	return 1;
+	return true;
 }
 
 float g_lastFOV = 0.0;

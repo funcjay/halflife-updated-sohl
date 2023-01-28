@@ -224,7 +224,6 @@ void CLight::SetStyle(int iszPattern)
 	if (m_iStyle < 32) // if it's using a global style, don't change it
 		return;
 	m_iszCurrentStyle = iszPattern;
-	//	ALERT(at_console, "SetStyle %d \"%s\"\n", m_iStyle, (char *)STRING( iszPattern ));
 	LIGHT_STYLE(m_iStyle, (char*)STRING(iszPattern));
 }
 
@@ -236,27 +235,27 @@ void CLight::SetCorrectStyle()
 		switch (m_iState)
 		{
 		case STATE_ON:
-			if (m_iszPattern) // custom styles have priority over standard ones
+			if (!FStringNull(m_iszPattern)) // custom styles have priority over standard ones
 				SetStyle(m_iszPattern);
-			else if (m_iOnStyle)
+			else if (m_iOnStyle != 0)
 				SetStyle(GetStdLightStyle(m_iOnStyle));
 			else
 				SetStyle(MAKE_STRING("m"));
 			break;
 		case STATE_OFF:
-			if (m_iOffStyle)
+			if (m_iOffStyle != 0)
 				SetStyle(GetStdLightStyle(m_iOffStyle));
 			else
 				SetStyle(MAKE_STRING("a"));
 			break;
 		case STATE_TURN_ON:
-			if (m_iTurnOnStyle)
+			if (m_iTurnOnStyle != 0)
 				SetStyle(GetStdLightStyle(m_iTurnOnStyle));
 			else
 				SetStyle(MAKE_STRING("a"));
 			break;
 		case STATE_TURN_OFF:
-			if (m_iTurnOffStyle)
+			if (m_iTurnOffStyle != 0)
 				SetStyle(GetStdLightStyle(m_iTurnOffStyle));
 			else
 				SetStyle(MAKE_STRING("m"));
@@ -319,7 +318,7 @@ void CLight::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType
 		{
 		case STATE_ON:
 		case STATE_TURN_ON:
-			if (m_iTurnOffTime)
+			if (m_iTurnOffTime != 0)
 			{
 				m_iState = STATE_TURN_OFF;
 				SetNextThink(m_iTurnOffTime);
@@ -329,7 +328,7 @@ void CLight::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType
 			break;
 		case STATE_OFF:
 		case STATE_TURN_OFF:
-			if (m_iTurnOnTime)
+			if (m_iTurnOnTime != 0)
 			{
 				m_iState = STATE_TURN_ON;
 				SetNextThink(m_iTurnOnTime);
@@ -437,7 +436,7 @@ void CLightDynamic::Spawn()
 	pev->solid = SOLID_NOT;
 	pev->movetype = MOVETYPE_NONE;
 
-	if (!(pev->spawnflags & SF_LIGHTDYNAMIC_START_OFF))
+	if (!FBitSet(pev->spawnflags, SF_LIGHTDYNAMIC_START_OFF))
 	{
 		pev->health = 1;
 		SetEffects();
@@ -451,9 +450,9 @@ void CLightDynamic::Precache()
 
 void CLightDynamic::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value)
 {
-	if (ShouldToggle(useType, pev->health))
+	if (ShouldToggle(useType, pev->health != 0))
 	{
-		if (pev->health)
+		if (pev->health != 0)
 			pev->health = 0;
 		else
 			pev->health = 1;
@@ -463,14 +462,14 @@ void CLightDynamic::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE 
 
 void CLightDynamic::SetEffects()
 {
-	if (pev->health)
+	if (pev->health != 0)
 	{
 		if (pev->frags == 2)
 			pev->effects |= EF_BRIGHTLIGHT;
-		else if (pev->frags)
+		else if (pev->frags != 0)
 			pev->effects |= EF_DIMLIGHT;
 
-		if (pev->spawnflags & SF_LIGHTDYNAMIC_FLARE)
+		if (FBitSet(pev->spawnflags, SF_LIGHTDYNAMIC_FLARE))
 			pev->effects |= EF_LIGHT;
 	}
 	else
@@ -481,7 +480,7 @@ void CLightDynamic::SetEffects()
 
 STATE CLightDynamic::GetState()
 {
-	if (pev->health)
+	if (pev->health != 0)
 		return STATE_ON;
 	else
 		return STATE_OFF;
@@ -532,7 +531,6 @@ void CLightFader::FadeThink()
 	{
 		m_szCurStyle[0] = m_cTo + (char)((m_cFrom - m_cTo) * (m_fEndTime - gpGlobals->time) * m_fStep);
 		m_szCurStyle[1] = 0; // null terminator
-							 //		ALERT(at_console, "FadeThink: %s %s\n", STRING(m_pLight->pev->classname), m_szCurStyle);
 		m_pLight->SetStyle(MAKE_STRING(m_szCurStyle));
 		SetNextThink(0.1);
 	}
@@ -614,10 +612,8 @@ bool CTriggerLightstyle::KeyValue(KeyValueData* pkvd)
 void CTriggerLightstyle::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value)
 {
 	CBaseEntity* pTarget = NULL;
-	if (!pev->target)
+	if (FStringNull(pev->target))
 		return;
-
-	//ALERT( at_console, "Lightstyle change for: (%s)\n", STRING(pev->target) );
 
 	for (;;)
 	{
@@ -626,7 +622,7 @@ void CTriggerLightstyle::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_
 			break;
 
 		int iszPattern;
-		if (m_iszPattern)
+		if (!FStringNull(m_iszPattern))
 			iszPattern = m_iszPattern;
 		else
 			iszPattern = GetStdLightStyle(m_iStyle);
@@ -641,9 +637,8 @@ void CTriggerLightstyle::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_
 		{
 			CLight* pLight = (CLight*)pTarget;
 
-			if (m_iFade)
+			if (m_iFade != 0)
 			{
-				//				ALERT(at_console, "Making fader ent, step 1/%d = %f\n", m_iFade, 1/m_iFade);
 				CLightFader* pFader = GetClassPtr((CLightFader*)NULL);
 				pFader->m_pLight = pLight;
 				pFader->m_cFrom = ((char*)STRING(pLight->GetStyle()))[0];

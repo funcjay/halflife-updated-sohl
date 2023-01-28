@@ -36,9 +36,6 @@ TYPEDESCRIPTION CTalkMonster::m_SaveData[] =
 		DEFINE_FIELD(CTalkMonster, m_bitsSaid, FIELD_INTEGER),
 		DEFINE_FIELD(CTalkMonster, m_nSpeak, FIELD_INTEGER),
 
-		// Recalc'ed in Precache()
-		//	DEFINE_FIELD( CTalkMonster, m_voicePitch, FIELD_INTEGER ),
-		//	DEFINE_FIELD( CTalkMonster, m_szGrp, FIELD_??? ),
 		DEFINE_FIELD(CTalkMonster, m_useTime, FIELD_TIME),
 		DEFINE_FIELD(CTalkMonster, m_iszUse, FIELD_STRING),
 		DEFINE_FIELD(CTalkMonster, m_iszUnUse, FIELD_STRING),
@@ -771,7 +768,7 @@ void CTalkMonster::TalkInit()
 
 	CTalkMonster::g_talkWaitTime = 0;
 
-	if (m_iszSpeakAs) //LRC: changing voice groups for monsters
+	if (!FStringNull(m_iszSpeakAs)) //LRC: changing voice groups for monsters
 	{
 		char szBuf[64];
 		strcpy(szBuf, STRING(m_iszSpeakAs));
@@ -787,17 +784,17 @@ void CTalkMonster::TalkInit()
 		m_szGrp[TLK_IDLE] = STRING(ALLOC_STRING(szBuf));
 		strcpy(szAssign, "STARE");
 		m_szGrp[TLK_STARE] = STRING(ALLOC_STRING(szBuf));
-		if (pev->spawnflags & SF_MONSTER_PREDISASTER) //LRC
+		if (FBitSet(pev->spawnflags, SF_MONSTER_PREDISASTER)) // LRC
 			strcpy(szAssign, "PFOLLOW");
 		else
 			strcpy(szAssign, "OK");
 		m_szGrp[TLK_USE] = STRING(ALLOC_STRING(szBuf));
-		if (pev->spawnflags & SF_MONSTER_PREDISASTER) //LRC
+		if (FBitSet(pev->spawnflags, SF_MONSTER_PREDISASTER)) // LRC
 			strcpy(szAssign, "PWAIT");
 		else
 			strcpy(szAssign, "WAIT");
 		m_szGrp[TLK_UNUSE] = STRING(ALLOC_STRING(szBuf));
-		if (pev->spawnflags & SF_MONSTER_PREDISASTER) //LRC
+		if (FBitSet(pev->spawnflags, SF_MONSTER_PREDISASTER)) // LRC
 			strcpy(szAssign, "POK");
 		else
 			strcpy(szAssign, "NOTOK");
@@ -1455,30 +1452,25 @@ void CTalkMonster::FollowerUse(CBaseEntity* pActivator, CBaseEntity* pCaller, US
 	if (m_useTime > gpGlobals->time)
 		return;
 
-	//ALERT(at_console,"Talkmonster was Used: ");
-
 	// CanFollow is now true if the monster could physically follow anyone
 	if (pCaller != NULL && pCaller->IsPlayer() && CanFollow())
 	{
 		if (!IsFollowing())
 		{
 			// Pre-disaster followers can't be used unless they've got a master to override their behaviour...
-			if (IsLockedByMaster() || (pev->spawnflags & SF_MONSTER_PREDISASTER && !m_sMaster))
+			if (IsLockedByMaster() || FBitSet(pev->spawnflags, SF_MONSTER_PREDISASTER) && FStringNull(m_sMaster))
 			{
-				//ALERT(at_console,"Decline\n");
 				DeclineFollowing();
 			}
 			else
 			{
 				LimitFollowers(pCaller, 1);
-				if (m_afMemory & bits_MEMORY_PROVOKED)
+				if (FBitSet(m_afMemory, bits_MEMORY_PROVOKED))
 				{
-					//ALERT(at_console,"Fail\n");
 					ALERT(at_aiconsole, "I'm not following you, you evil person!\n");
 				}
 				else
 				{
-					//ALERT(at_console,"Start\n");
 					StartFollowing(pCaller);
 					SetBits(m_bitsSaid, bit_saidHelloPlayer); // Don't say hi after you've started following
 				}
@@ -1486,7 +1478,6 @@ void CTalkMonster::FollowerUse(CBaseEntity* pActivator, CBaseEntity* pCaller, US
 		}
 		else
 		{
-			//ALERT(at_console,"Stop\n");
 			StopFollowing(true);
 		}
 	}
@@ -1525,6 +1516,6 @@ void CTalkMonster::Precache()
 		m_szGrp[TLK_USE] = STRING(m_iszUse);
 	if (!FStringNull(m_iszUnUse))
 		m_szGrp[TLK_UNUSE] = STRING(m_iszUnUse);
-	if (m_iszDecline) //LRC
+	if (!FStringNull(m_iszDecline)) //LRC
 		m_szGrp[TLK_DECLINE] = STRING(m_iszDecline);
 }

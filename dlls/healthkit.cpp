@@ -27,27 +27,8 @@ class CHealthKit : public CItem
 	void Spawn() override;
 	void Precache() override;
 	bool MyTouch(CBasePlayer* pPlayer) override;
-
-	/*
-	virtual bool	Save( CSave &save ); 
-	virtual bool	Restore( CRestore &restore );
-	
-	static	TYPEDESCRIPTION m_SaveData[];
-*/
 };
-
-
 LINK_ENTITY_TO_CLASS(item_healthkit, CHealthKit);
-
-/*
-TYPEDESCRIPTION	CHealthKit::m_SaveData[] = 
-{
-
-};
-
-
-IMPLEMENT_SAVERESTORE( CHealthKit, CItem);
-*/
 
 void CHealthKit::Spawn()
 {
@@ -282,7 +263,7 @@ STATE CWallHealth::GetState()
 {
 	if (m_iOn == 2)
 		return STATE_IN_USE;
-	else if (m_iJuice)
+	else if (m_iJuice <= 0)
 		return STATE_ON;
 	else
 		return STATE_OFF;

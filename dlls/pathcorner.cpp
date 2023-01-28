@@ -28,7 +28,6 @@ public:
 	void Spawn() override;
 	bool KeyValue(KeyValueData* pkvd) override;
 	float GetDelay() override { return m_flWait; }
-	//	void Touch( CBaseEntity *pOther ) override;
 	bool Save(CSave& save) override;
 	bool Restore(CRestore& restore) override;
 
@@ -60,7 +59,7 @@ bool CPathCorner::KeyValue(KeyValueData* pkvd)
 	}
 	else if (FStrEq(pkvd->szKeyName, "turnspeed")) //LRC
 	{
-		if (pkvd->szValue[0]) // if the field is blank, don't set the spawnflag.
+		if (pkvd->szValue[0] != NULL) // if the field is blank, don't set the spawnflag.
 		{
 			pev->spawnflags |= SF_CORNER_AVELOCITY;
 			UTIL_StringToVector((float*)pev->avelocity, pkvd->szValue);
@@ -103,7 +102,7 @@ bool CPathTrack::KeyValue(KeyValueData* pkvd)
 	}
 	else if (FStrEq(pkvd->szKeyName, "turnspeed")) //LRC
 	{
-		if (pkvd->szValue[0]) // if the field is blank, don't set the spawnflag.
+		if (pkvd->szValue[0] != NULL) // if the field is blank, don't set the spawnflag.
 		{
 			pev->spawnflags |= SF_PATH_AVELOCITY;
 			UTIL_StringToVector((float*)pev->avelocity, pkvd->szValue);

@@ -111,7 +111,6 @@ public:
 
 	void DesiredAction() override; //LRC - used to be called Next!
 
-	//	void EXPORT Next();
 	void EXPORT PostponeNext();
 	void EXPORT Find();
 	void EXPORT NearestPath();

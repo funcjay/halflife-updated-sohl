@@ -56,7 +56,7 @@ public:
 	void Spawn() override;
 	void Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value) override;
 
-	STATE GetState() override { return pev->frame ? STATE_ON : STATE_OFF; };
+	STATE GetState() override { return pev->frame != 0 ? STATE_ON : STATE_OFF; };
 
 	// Bmodels don't go across transitions
 	int ObjectCaps() override { return CBaseEntity::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
@@ -92,14 +92,14 @@ void CFuncWall::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useT
 		pev->frame = 1 - pev->frame;
 		if (m_iStyle >= 32)
 		{
-			if (pev->frame)
+			if (pev->frame != 0)
 				LIGHT_STYLE(m_iStyle, "z");
 			else
 				LIGHT_STYLE(m_iStyle, "a");
 		}
 		else if (m_iStyle <= -32)
 		{
-			if (pev->frame)
+			if (pev->frame != 0)
 				LIGHT_STYLE(-m_iStyle, "a");
 			else
 				LIGHT_STYLE(-m_iStyle, "z");
@@ -308,7 +308,7 @@ void CFuncShine ::Activate()
 
 void CFuncShine ::DesiredAction(void)
 {
-	if (pev->message && pev->renderamt)
+	if (!FStringNull(pev->message) && pev->renderamt != 0)
 	{
 		//		ALERT(at_console, "Prepare think\n");
 		pev->nextthink = gpGlobals->time + 1.5;
@@ -852,7 +852,7 @@ public:
 	bool Save(CSave& save) override;
 	bool Restore(CRestore& restore) override;
 	void Blocked(CBaseEntity* pOther) override;
-	STATE GetState() override { return (pev->speed) ? STATE_ON : STATE_OFF; }
+	STATE GetState() override { return pev->speed != 0 ? STATE_ON : STATE_OFF; }
 
 	static TYPEDESCRIPTION m_SaveData[];
 

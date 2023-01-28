@@ -145,7 +145,7 @@ const char* CISlave::pDeathSounds[] =
 //=========================================================
 int CISlave::Classify()
 {
-	return m_iClass ? m_iClass : CLASS_ALIEN_MILITARY;
+	return m_iClass != 0 ? m_iClass : CLASS_ALIEN_MILITARY;
 }
 
 
@@ -160,8 +160,6 @@ int CISlave::IRelationship(CBaseEntity* pTarget)
 
 void CISlave::CallForHelp(const char* szClassname, float flDist, EHANDLE hEnemy, Vector& vecLocation)
 {
-	// ALERT( at_aiconsole, "help " );
-
 	// skip ones not on my netname
 	if (FStringNull(pev->netname))
 		return;
@@ -283,7 +281,6 @@ void CISlave::SetYawSpeed()
 //=========================================================
 void CISlave::HandleAnimEvent(MonsterEvent_t* pEvent)
 {
-	// ALERT( at_console, "event %d : %f\n", pEvent->event, pev->frame );
 	switch (pEvent->event)
 	{
 	case ISLAVE_AE_CLAW:
@@ -387,11 +384,6 @@ void CISlave::HandleAnimEvent(MonsterEvent_t* pEvent)
 				WackBeam(1, pNew);
 				UTIL_Remove(m_hDead);
 				EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, "hassault/hw_shoot1.wav", 1, ATTN_NORM, 0, RANDOM_LONG(130, 160));
-
-				/*
-					CBaseEntity *pEffect = Create( "test_effect", pNew->Center(), pev->angles );
-					pEffect->Use( this, this, USE_ON, 1 );
-					*/
 				break;
 			}
 		}
@@ -403,7 +395,6 @@ void CISlave::HandleAnimEvent(MonsterEvent_t* pEvent)
 		ZapBeam(1);
 
 		EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, "hassault/hw_shoot1.wav", 1, ATTN_NORM, 0, RANDOM_LONG(130, 160));
-		// STOP_SOUND( ENT(pev), CHAN_WEAPON, "debris/zap4.wav" );
 		ApplyMultiDamage(pev, pev);
 
 		m_flNextAttack = gpGlobals->time + RANDOM_FLOAT(0.5, 4.0);
@@ -499,8 +490,8 @@ void CISlave::Spawn()
 {
 	Precache();
 
-	if (pev->model)
-		SET_MODEL(ENT(pev), STRING(pev->model)); //LRC
+	if (!FStringNull(pev->model))
+		SET_MODEL(ENT(pev), (char*)STRING(pev->model)); //LRC
 	else
 		SET_MODEL(ENT(pev), "models/islave.mdl");
 	UTIL_SetSize(pev, VEC_HUMAN_HULL_MIN, VEC_HUMAN_HULL_MAX);
@@ -526,7 +517,7 @@ void CISlave::Spawn()
 //=========================================================
 void CISlave::Precache()
 {
-	if (pev->model)
+	if (!FStringNull(pev->model))
 		PRECACHE_MODEL((char*)STRING(pev->model)); //LRC
 	else
 		PRECACHE_MODEL("models/islave.mdl");
@@ -616,14 +607,6 @@ Schedule_t* CISlave::GetSchedule()
 {
 	ClearBeams();
 
-	/*
-	if (pev->spawnflags)
-	{
-		pev->spawnflags = 0;
-		return GetScheduleOfType( SCHED_RELOAD );
-	}
-*/
-
 	if (HasConditions(bits_COND_HEAR_SOUND))
 	{
 		CSound* pSound;
@@ -658,7 +641,6 @@ Schedule_t* CISlave::GetSchedule()
 				}
 				if (HasConditions(bits_COND_SEE_ENEMY) && HasConditions(bits_COND_ENEMY_FACING_ME))
 				{
-					// ALERT( at_console, "exposed\n");
 					return GetScheduleOfType(SCHED_TAKE_COVER_FROM_ENEMY);
 				}
 			}
@@ -727,7 +709,6 @@ void CISlave::ArmBeam(int side)
 
 	m_pBeam[m_iBeams]->PointEntInit(tr.vecEndPos, entindex());
 	m_pBeam[m_iBeams]->SetEndAttachment(side < 0 ? 2 : 1);
-	// m_pBeam[m_iBeams]->SetColor( 180, 255, 96 );
 	m_pBeam[m_iBeams]->SetColor(96, 128, 16);
 	m_pBeam[m_iBeams]->SetBrightness(64);
 	m_pBeam[m_iBeams]->SetNoise(80);
